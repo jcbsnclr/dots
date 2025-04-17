@@ -65,6 +65,8 @@
         <query identifier="org.keepassxc.KeePassXC" />
         <then>
           <action name="Focus" />
+          <action name="Raise" />
+          <action name="SnapToRegion" region="center" />      
         </then>
         <none>
           <action name="Execute" command="keepassxc" />
