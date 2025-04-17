@@ -9,6 +9,14 @@ die() {
   exit 1
 }
 
+if [ "$#" -ne 1 ]; then
+  die "usage: ./deploy.sh [TARGET]"
+elif ! which stow >/dev/null; then
+  die "error: GNU stow not found"
+elif ! which tput >/dev/null; then
+  die "error: tput not found"
+fi
+
 BOLD=$(tput bold)
 CYAN=$(tput setaf 6)
 NORMAL=$(tput sgr0)
@@ -30,12 +38,6 @@ yesno() {
     esac
   done
 }
-
-if [ "$#" -ne 1 ]; then
-  die "usage: ./deploy.sh [TARGET]"
-elif ! which stow >/dev/null; then
-  die "error: GNU stow not found"
-fi
 
 TARGET=$1
 
