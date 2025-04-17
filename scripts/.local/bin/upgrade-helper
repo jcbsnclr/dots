@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+foot sh -c 'doas apk upgrade -Ui && read -s -p "$(tput bold)Press enter to exit..."'

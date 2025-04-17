@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<openbox_menu>
+
+<menu id="client-menu">
+  <item label="minimize">
+    <action name="Iconify" />
+  </item>
+  <item label="maximize">
+    <action name="ToggleMaximize" />
+  </item>
+  <item label="fullscreen">
+    <action name="ToggleFullscreen" />
+  </item>
+
+  <menu id="deco-menu" label="decorations">
+    <item label="on">
+      <action name="SetDecorations" decorations="all" />
+    </item>
+    <item label="off">
+      <action name="SetDecorations" decorations="border" />
+    </item>
+  </menu>
+
+  <item label="alwaysontop">
+    <action name="ToggleAlwaysOnTop" />
+  </item>
+  <!--
+    Any menu with the id "workspaces" will be hidden
+    if there is only a single workspace available.
+  -->
+  <menu id="workspaces" label="Workspace">
+    <item label="move left">
+      <action name="SendToDesktop" to="left" />
+      <action name="GoToDesktop" to="left" />
+    </item>
+    <item label="move right">
+      <action name="SendToDesktop" to="right" />
+      <action name="GoToDesktop" to="right" />
+    </item>
+  </menu>
+  <item label="close">
+    <action name="Close" />
+  </item>
+</menu>
+
+<menu id="root-menu">
+  <item label="apk upgrade">
+    <action name="Execute">
+      <command>upgrade-helper</command>
+    </action>
+  </item>
+  
+  <item label="suspend">
+    <action name="Execute" command="loginctl suspend" />
+  </item>
+
+  <menu id="power" label="power">
+    <item label="poweroff">
+      <action name="Execute" command="loginctl poweroff" />
+    </item>
+    <item label="reboot">
+      <action name="Execute" command="loginctl reboot" />
+    </item>
+    <item label="reboot (windows)">
+      <action name="Execute" command="doas /usr/local/bin/rbwin" />
+    </item>
+    <item label="reboot (firmware)">
+      <action name="Execute" command="loginctl reboot --firmware-setup" />
+    </item>
+  </menu>
+
+  <item label="exit">
+    <action name="Exit" />
+  </item>
+
+</menu>
+
+</openbox_menu>

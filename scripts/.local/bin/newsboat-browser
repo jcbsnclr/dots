@@ -1,0 +1,32 @@
+#!/usr/bin/env sh
+
+# newsboat-browser -- dispatches opened newsboat urls to correct app
+
+if [ "$#" -ne 1 ]; then
+  echo "usage: $(basename $0) [URL]"
+fi
+
+# expr "$1" : 'https://www\.youtube\.com/v' && echo youtube
+
+URL="$1"
+
+notify() {
+  ICON="$HOME/.local/share/icons/$1.png"
+
+  notify-send -i "$ICON" "Newsboat" "Opening URL $URL in $1" -t 3000
+}
+
+rule() {
+  REGEX="$1"
+  HANDLER="$2"
+
+  if expr "$URL" : "$REGEX"; then 
+    notify "$HANDLER"
+    $HANDLER "$URL" &  
+
+    exit
+  fi
+}
+
+rule 'https://www\.youtube\.com/' mpv
+rule '.*'                         firefox

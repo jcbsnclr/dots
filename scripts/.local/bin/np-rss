@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+
+# np-rss -- parses exported newpipe subscriptions into list of rss links
+
+if [ "$#" -ne 1 ]; then
+  echo "usage: $(basename $0) [FILE]" 1>&2
+  exit 1
+fi
+
+parse() {
+  jq -r ".subscriptions[].url" "$1"
+}
+
+get_feeds() {
+  sed 's@channel/@feeds/videos.xml?channel_id=@g' 
+}
+
+add_tags() {
+  sed 's@$@ youtube@g'
+}
+
+parse "$1" | get_feeds | add_tags 

@@ -1,0 +1,21 @@
+# info about session
+XDG_SESSION_TYPE=wayland
+XDG_SESSION_DESKTOP=wlroots
+XDG_CURRENT_DESKTOP=wlroots
+
+# env vars for wayland
+MOZ_ENABLE_WAYLAND=1
+QP_QPA_PLATFORM=wayland
+SDL_VIDEODRIVER=wayland
+_JAVA_AWT_WM_NONREPARENTING=1
+
+# theming
+QT_QPA_PLATFORMTHEME=adwaita-dark
+QT_STYLE_OVERRIDE=adwaita-dark
+GTK_THEME=Adwaita:dark
+XCURSOR_THEME=capitaine-cursors-dark
+
+# input
+XKB_DEFAULT_LAYOUT=gb,ara
+XKB_DEFAULT_OPTIONS=caps:none,grp:rctrl_toggle
+

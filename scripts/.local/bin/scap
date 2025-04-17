@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+
+usage() {
+  echo "usage: $(basename $0) [all|area|output]" 1>&2 
+  exit 1
+}
+
+if [ "$#" -ne 1 ]; then
+  usage
+fi 
+
+case "$1" in
+  all)
+    grim - | wl-copy
+    ;;
+
+  area)
+    grim -g "$(slurp)" - | wl-copy
+    ;;
+
+  output)
+    grim -g "$(slurp -o)" - | wl-copy
+    ;;
+
+  *)
+    usage
+esac
+
+OUTP="$HOME/media/pictures/screenshots/$(date +%Y-%M-%d_%H:%M:%S.png)"
+wl-paste > $OUTP

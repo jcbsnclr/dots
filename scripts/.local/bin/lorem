@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+# requires aspell and english dictionary
+
+MAX_LENGTH=6
+MIN_LENGTH=1
+
+aspell -d en dump master | aspell -l en expand | python3 -c "import random, sys; print(*(x.strip() for x in random.choices(list(sys.stdin), k = ${1:-10})))"

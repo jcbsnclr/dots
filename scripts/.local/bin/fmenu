@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+# set -o pipefail
+
+RES="$(flatpak list --columns=name --app | wmenu -i)"
+
+if [ -z "$RES" ]; then
+  exit 0
+fi
+
+flatpak run $(flatpak list --columns=name,ref --app | \
+grep "$RES" | cut -f 2)

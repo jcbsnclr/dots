@@ -1,0 +1,41 @@
+#!/usr/bin/env sh
+
+if [ $# -lt 1 ]; then
+	echo "usage: $(basename $0) [PKG]..." 1>&2
+	exit 1
+fi
+
+if [ -z "$BROWSER" ]; then
+	BROWSER="$(which xdg-open)"
+
+	if [ -z "$BROWSER" ]; then
+		echo 'error: $BROWSER unset and "xdg-open" not found' 1>&2
+		exit 1
+	fi
+fi
+
+urls() {
+	grep -Eo "(http|https)://[a-zA-Z0-9./?=_%:-]*"
+}
+
+# for arg in "$@"; do
+# 	OUTP="$(apk info -w "$arg")"
+
+# 	if [ $? -ne 0 ]; then
+# 		echo "failed to find URL for '$arg'" 1>&2
+# 		continue
+# 	fi
+
+# 	echo "$OUTP" | urls | while read -r URL; do
+# 		$BROWSER "$URL"
+# 	done
+# done
+
+OUTP="$(apk info -w $@)"
+if [ $? -ne 0 ]; then
+	echo "failed to run query '$@'" 1>&2
+fi
+
+echo "$OUTP" | urls | while read -r URL; do
+	$BROWSER "$URL"
+done

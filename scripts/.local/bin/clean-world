@@ -1,0 +1,44 @@
+#!/usr/bin/env sh
+
+# clean-world -- go through installed packages and prompt for removal
+
+BOLD=$(tput bold)
+CYAN=$(tput setaf 6)
+NORMAL=$(tput sgr0)
+
+yesno() {
+  while true; do
+    read -p "$BOLD$CYAN$1?$NORMAL [y/N]: " tmp
+
+    if [ -z "$tmp" ]; then 
+      ANS=n
+      break
+    fi
+    
+    case $tmp in 
+      [Yy]* ) ANS=y; break;;
+      [Nn]* ) ANS=n; break;;
+          * ) echo "please answer yes or no" 1>&2 ;;
+      
+    esac
+  done
+}
+
+PKGS=
+
+for pkg in $(cat /etc/apk/world); do
+  apk info $pkg
+
+  yesno "remove package"
+  if [ "$ANS" = y ]; then 
+    PKGS="$PKGS $pkg"
+  fi
+done
+
+echo $BOLD$CYAN"packages to be removed"$NORMAL":"
+echo $PKGS | fold -s | sed 's/^\s//' | sed 's/^/    /'
+yesno "confirm removal"
+
+if [ "$ANS" = y ]; then
+  doas apk del --purge $PKGS
+fi
