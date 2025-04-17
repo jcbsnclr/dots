@@ -11,3 +11,9 @@
   - swaylock
 - lxqt-policykit
 - pinentry-qt
+
+## installation
+```sh
+# currently only one target "main"
+./deploy.sh main
+```
