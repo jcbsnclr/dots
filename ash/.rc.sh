@@ -100,6 +100,10 @@ alias rc-add="doas rc-update add"
 alias rc-del="doas rc-update del"
 alias sv="doas rc-service"
 
+alias urc-add="rc-update add --user"
+alias urc-del="rc-update del --user"
+alias usv="rc-service --user"
+
 if [ "$USER" != "root" ]; then
   source $HOME/.cargo/env
 fi

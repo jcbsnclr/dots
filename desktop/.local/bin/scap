@@ -28,3 +28,4 @@ esac
 
 OUTP="$HOME/media/pictures/screenshots/$(date +%Y-%M-%d_%H:%M:%S.png)"
 wl-paste > $OUTP
+notify-send -t 3000 -i "$OUTP" "Screenshot Taken" "$OUTP"
