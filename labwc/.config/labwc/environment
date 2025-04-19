@@ -14,6 +14,7 @@ QT_QPA_PLATFORMTHEME=adwaita-dark
 QT_STYLE_OVERRIDE=adwaita-dark
 GTK_THEME=Adwaita:dark
 XCURSOR_THEME=capitaine-cursors-dark
+XCURSOR_SIZE=24
 
 # input
 XKB_DEFAULT_LAYOUT=gb,ara

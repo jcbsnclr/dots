@@ -15,8 +15,8 @@ export PS1="$(ps1_prompt_colour)[\u@\h \w]$ANSI_REGULAR $(ps1_prompt_char) "
 export EDITOR=hx
 export BROWSER=firefox
 
-export GTK_THEME=Adwaita:dark
-export QT_STYLE_OVERRIDE=Adwaita-Dark
+# export GTK_THEME=Adwaita:dark
+# export QT_STYLE_OVERRIDE=Adwaita-Dark
 
 export PAGER=less
 export MANPAGER=batman
@@ -32,6 +32,7 @@ alias zzz="loginctl suspend"
 
 # misc
 alias sfwrl="killall -SIGHUP sfwbar"
+alias monrl="wlr-randr --output DP-3 --on --output DP-1 --on"
 
 # interactive and verbose aliases
 alias cp="cp -iv"

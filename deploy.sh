@@ -45,7 +45,7 @@ DEPS=""
 
 case "$TARGET" in
   main)
-    DEPS="ash gtk labwc sfwbar scripts gnupg themes" 
+    DEPS="ash gtk labwc sfwbar scripts gnupg themes openrc" 
     ;;
   
   *)
