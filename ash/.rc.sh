@@ -52,7 +52,7 @@ alias fp-del="doas $FP uninstall --system"
 alias fp-upd="doas $FP update --system"
 alias fp-run="$FP run"
 
-# folders
+# navigation
 alias aports="cd $HOME/aports"
 alias src="cd $HOME/src"
 alias down="cd $HOME/net/down"
@@ -61,6 +61,10 @@ alias pictures="cd $HOME/media/pictures"
 alias videos="cd $HOME/media/videos"
 alias music="cd $HOME/media/music"
 alias dots="cd $HOME/dots"
+
+alias ..="cd .."
+alias ..2="cd ../.."
+alias ..3="cd ../../.."
 
 # aliases for doas
 alias hxas="doas hx"
