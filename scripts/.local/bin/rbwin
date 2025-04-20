@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# SPDX-License-Identifier: BSD-3-Clause-No-Nuclear-License-2014
+
+if [ "$(id -u)" != "0" ]; then
+  echo "you must be root to run $(basename $0)" 1>&2
+  exit 1
+fi
+
+WINBOOT="$(efibootmgr | rg '^Boot([0-9]{4}). Windows' --replace '$1' -o)"
+efibootmgr -n $WINBOOT
+loginctl reboot

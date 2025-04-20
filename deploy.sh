@@ -45,11 +45,11 @@ DEPS=""
 
 case "$TARGET" in
   main)
-    DEPS="ash desktop scripts" 
+    DEPS="ash desktop scripts helix" 
     ;;
 
   sh)
-    DEPS="ash scripts"
+    DEPS="ash scripts helix"
     ;;
   
   *)

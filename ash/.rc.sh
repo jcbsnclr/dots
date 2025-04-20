@@ -98,10 +98,12 @@ alias gtree="exa --tree --git --git-ignore --long --no-user -a"
 # service management aliases
 alias rc-add="doas rc-update add"
 alias rc-del="doas rc-update del"
+alias rc-st="doas rc-status"
 alias sv="doas rc-service"
 
 alias urc-add="rc-update add --user"
 alias urc-del="rc-update del --user"
+alias urc-st="rc-status --user"
 alias usv="rc-service --user"
 
 if [ "$USER" != "root" ]; then

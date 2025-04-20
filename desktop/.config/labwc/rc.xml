@@ -72,6 +72,8 @@
           <action name="Execute" command="keepassxc" />
         </none>
       </action>
+
+      <action name="Execute" command="pkexec echo foo" />
     </keybind>
   
     <keybind key="W-S-d">

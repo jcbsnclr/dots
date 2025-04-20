@@ -1,0 +1,28 @@
+[language-server.tinymist]
+command = "tinymist"
+config = { exportPdf = "never" }
+
+[[language]]
+name = "typst"
+scope = "source.typst"
+file-types = ["typst", "typ"]
+indent = { tab-width = 2, unit = "  " }
+comment-token = "//"
+injection-regex = "typ(st)?"
+roots = ["typst.toml"]
+language-servers = ["tinymist"]
+
+[language.auto-pairs]
+'(' = ')'
+'{' = '}'
+'[' = ']'
+'$' = '$'
+'"' = '"'
+
+[[language]]
+name = "c"
+indent = { tab-width = 4, unit = "    " }
+auto-format = true
+file-types = ["c", "h"]
+language-servers = ["clangd", "clang-format"]
+
