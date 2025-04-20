@@ -3,14 +3,14 @@ ANSI_GREEN="$(tput setaf 2)"
 ANSI_REGULAR="$(tput sgr0)"
 
 ps1_prompt_colour() {
-  [ "$USER" = "root" ] && echo "$ANSI_RED" || echo "$ANSI_GREEN"
+  [ "$USER" = "root" ] && echo "\[$ANSI_RED\]" || echo "\[$ANSI_GREEN\]"
 }
 
 ps1_prompt_char() {
   [ "$USER" = "root" ] && echo "#" || echo "\$"
 }
 
-export PS1="$(ps1_prompt_colour)[\u@\h \w]$ANSI_REGULAR $(ps1_prompt_char) "
+export PS1="$(ps1_prompt_colour)[\u@\h \w]\[$ANSI_REGULAR\] $(ps1_prompt_char) "
 
 export EDITOR=hx
 export BROWSER=firefox

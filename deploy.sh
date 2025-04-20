@@ -42,14 +42,35 @@ yesno() {
 TARGET=$1
 
 DEPS=""
+APKS=""
+
+base() {
+  DEPS="$DEPS ash scripts"
+}
+
+helix() {
+  DEPS="$DEPS helix"
+}
+
+desktop() {
+  base
+  helix
+
+  DEPS="$DEPS desktop"
+}
+
 
 case "$TARGET" in
-  main)
-    DEPS="ash desktop scripts helix" 
+  base)
+    base
     ;;
 
-  sh)
-    DEPS="ash scripts helix"
+  helix)
+    helix
+    ;;
+
+  desktop)
+    desktop
     ;;
   
   *)
