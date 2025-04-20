@@ -47,6 +47,10 @@ case "$TARGET" in
   main)
     DEPS="ash desktop scripts" 
     ;;
+
+  sh)
+    DEPS="ash scripts"
+    ;;
   
   *)
     die "unknown target '$TARGET'"

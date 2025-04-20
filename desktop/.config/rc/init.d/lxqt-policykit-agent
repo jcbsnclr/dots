@@ -1,0 +1,8 @@
+#!/sbin/openrc-run
+
+description="LxQt PolicyKit agent"
+
+command="/usr/bin/lxqt-policykit-agent"
+
+supervisor=supervise-daemon
+error_logger="logger -t '${RC_SVCNAME}' -p daemon.error"

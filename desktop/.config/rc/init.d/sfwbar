@@ -1,0 +1,12 @@
+#!/sbin/openrc-run
+
+description="Sway Floating Window Bar"
+
+command="/usr/local/bin/sfwbar"
+
+supervisor=supervise-daemon
+error_logger="logger -t '${RC_SVCNAME}' -p daemon.error"
+
+depend() {
+	need pipewire
+}
