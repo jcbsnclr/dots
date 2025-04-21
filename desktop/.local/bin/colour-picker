@@ -1,1 +1,1 @@
-#!/usr/bin/env sh
+grim -g "388,532 1x1" -t ppm - | magick - -format '%[pixel:p{0,0}]' txt:- | wl-copy

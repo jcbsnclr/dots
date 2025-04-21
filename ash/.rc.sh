@@ -2,6 +2,30 @@ ANSI_RED="$(tput setaf 1)"
 ANSI_GREEN="$(tput setaf 2)"
 ANSI_REGULAR="$(tput sgr0)"
 
+# Setting OSC0 and OSC7 for terminal title and PWD
+# Taken from vte.sh
+__urlencode() (
+  # This is important to make sure string manipulation is handled
+  # byte-by-byte.
+  LC_ALL=C
+  str="$1"
+  while [ -n "$str" ]; do
+    safe="${str%%[!a-zA-Z0-9/:_\.\-\!\'\(\)~]*}"
+    printf "%s" "$safe"
+    str="${str#"$safe"}"
+    if [ -n "$str" ]; then
+      printf "%%%02X" "'$str"
+      str="${str#?}"
+    fi
+  done
+)
+
+__osc_prompt_command() {
+  local pwd='~'
+  [ "$PWD" != "$HOME" ] && pwd=${PWD/#$HOME\//\~\/}
+  printf "\[\033]0;%s@%s:%s\]" "${USER}" "${HOSTNAME%%.*}" "${PWD}" 
+}
+
 ps1_prompt_colour() {
   [ "$USER" = "root" ] && echo "\[$ANSI_RED\]" || echo "\[$ANSI_GREEN\]"
 }
@@ -10,7 +34,7 @@ ps1_prompt_char() {
   [ "$USER" = "root" ] && echo "#" || echo "\$"
 }
 
-export PS1="$(ps1_prompt_colour)[\u@\h \w]\[$ANSI_REGULAR\] $(ps1_prompt_char) "
+export PS1='$(__osc_prompt_command)$(ps1_prompt_colour)[\u@\h \w]\[$ANSI_REGULAR\] $(ps1_prompt_char) '
 
 export EDITOR=hx
 export BROWSER=firefox
