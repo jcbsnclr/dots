@@ -13,9 +13,9 @@
   
   <windowSwitcher show="yes" preview="yes" outlines="yes">
     <fields>
-      <field content="custom" format="%b %s" width="9%" />
-      <field content="trimmed_identifier" width="30%" />
-      <field content="title" width="70%" />
+      <field content="custom" format="%b %s" width="5%" />
+      <field content="trimmed_identifier" width="20%" />
+      <field content="title" width="75%" />
     </fields>
   </windowSwitcher>
 
@@ -50,7 +50,7 @@
     <titlebar layout="menu,icon:desk,iconify,max,close" />      
   </theme>
 
-  <keyboard>
+  <keyboard numlock="on">
     <default />
     <!-- Use a different terminal emulator -->
     <keybind key="W-Return">
