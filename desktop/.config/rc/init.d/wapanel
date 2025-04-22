@@ -1,12 +1,13 @@
 #!/sbin/openrc-run
 
-description="Sway Floating Window Bar"
+description="Simple panel/status bar/task bar."
 
-command="/usr/local/bin/sfwbar-git"
+command="/usr/local/bin/wapanel"
 
 supervisor=supervise-daemon
 error_logger="logger -t '${RC_SVCNAME}' -p daemon.error"
 
 depend() {
 	need pipewire
+	need dbus
 }
