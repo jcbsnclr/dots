@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+if [ "$#" -ne "1" ]; then
+  echo "usage: $0 [PATH]"
+fi
+
+if [ -z "$EDITOR" ]; then
+  EDITOR=vi
+fi
+
+cp "$1" "$1.bak"
+$EDITOR "$1"

@@ -5,7 +5,7 @@ description="Simple panel/status bar/task bar."
 command="/usr/local/bin/wapanel"
 
 supervisor=supervise-daemon
-error_logger="logger -t '${RC_SVCNAME}' -p daemon.error"
+error_log="${HOME}/.local/state/log/${RC_SVCNAME}.log"
 
 depend() {
 	need pipewire

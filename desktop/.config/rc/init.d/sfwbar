@@ -5,7 +5,7 @@ description="Sway Floating Window Bar"
 command="/usr/local/bin/sfwbar-git"
 
 supervisor=supervise-daemon
-error_logger="logger -t '${RC_SVCNAME}' -p daemon.error"
+error_log="${HOME}/.local/state/log/${RC_SVCNAME}.log"
 
 depend() {
 	need pipewire

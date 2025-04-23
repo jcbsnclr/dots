@@ -26,3 +26,7 @@ auto-format = true
 file-types = ["c", "h"]
 language-servers = ["clangd", "clang-format"]
 
+[[language]]
+name = "bash"
+shebangs = ["sh", "openrc-run"]
+

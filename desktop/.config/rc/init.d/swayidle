@@ -6,4 +6,4 @@ command="/usr/bin/swayidle"
 command_args="-d -w -C ${SWAYIDLE_CONFIG:-$HOME/.config/swayidle/config}"
 
 supervisor=supervise-daemon
-error_logger="logger -t '${RC_SVCNAME}' -p daemon.error"
+error_log="${HOME}/.local/state/log/${RC_SVCNAME}.log"

@@ -1,8 +1,12 @@
 #!/sbin/openrc-run
 
-description="LxQt PolicyKit agent"
+description="Highly customizable Wayland bar."
 
-command="/usr/bin/lxqt-policykit-agent"
+command="/usr/bin/waybar"
 
 supervisor=supervise-daemon
 error_log="${HOME}/.local/state/log/${RC_SVCNAME}.log"
+
+depend() {
+	need pipewire
+}

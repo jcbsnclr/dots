@@ -1,0 +1,84 @@
+{
+    "layer": "bottom",        // Above or below windows [top/bottom]
+    "position": "bottom",     // [top/bottom/left/right]
+    "mode": "dock",           // [dock/hide/invisible/overlay]
+
+    "exclusive": true,
+    "gtk-layer-shell": true,
+    "passthrough": false,
+    "reload_style_on_change": true,
+
+    "height": 32,
+
+    "modules-left": [
+        "disk",
+        "wireplumber",
+    ],
+
+    "modules-center": [
+        "wlr/taskbar"
+    ],
+
+    "modules-right": [
+        "tray",
+        "clock"
+    ],
+
+    "wireplumber": {
+        "format": " {volume}%",
+        "format-muted": " MUTED",
+        "on-click": "pavucontrol",
+        "max-volume": 100,
+        "scroll-step": 0
+    },
+
+    "disk": {
+        "interval": 30,
+        "format": " {free}",
+        "path": "/home",
+        "tooltip": false,
+        "unit": "GB"
+    },
+
+    "wlr/taskbar": {
+        "format": "{icon} {name:.20}",
+        // "format": "{icon}",
+        "icon-size": 21,
+        "spacing": 10,
+        "on-click-middle": "close",
+        "tooltip": false,
+        "ignore-list": [],
+        "on-click": "activate",
+        // "active-first": true,
+        "sort-by-app-id": true,
+        "rewrite": {
+            "^(.{16}).+$": "$1…"
+        }
+    },
+
+    "tray": {
+        "icon-size": 21,
+        "show-passive-items": "true",
+        "spacing": 10
+    },
+
+    "clock": {
+        "format": " {:%H:%M:%S %Z | %Y-%d-%d}",
+        "tooltip-format": "<tt>{calendar}</tt>",
+
+        "calendar": {
+            "mode": "year",
+            "mode-mon-col": 3,
+            "weeks-pos": "right",
+            "on-scroll": 0,
+
+            "format": {
+                "months": "<span color='#ffead3'><b>{}</b></span>",
+                "days": "<span color='#ecc6d9'>{}</span>",
+                "weeks": "<span color='#99ffdd'>W{}</span>",
+                "weekdays": "<span color='#ffcc66'><b>{}</b></span>",
+                "today": "<span color='#ffcc66'><b><u>{}</u></b></span>"
+            }
+        }
+    },
+}
