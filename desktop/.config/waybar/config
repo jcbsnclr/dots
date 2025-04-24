@@ -63,7 +63,7 @@
     },
 
     "clock": {
-        "format": " {:%H:%M:%S %Z | %Y-%d-%d}",
+        "format": " {:%Y-%m-%d │ %H:%M %Z}",
         "tooltip-format": "<tt>{calendar}</tt>",
 
         "calendar": {

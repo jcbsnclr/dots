@@ -9,7 +9,7 @@ menu.width.min: 140
 menu.width.max: 900
 menu.overlap.x: 2
 menu.overlap.y: 0
-window.label.text.justify: left
+window.label.text.justify: center
 
 # Active Windows
 window.active.title.bg.color: #303030
