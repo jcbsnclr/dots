@@ -1,5 +1,5 @@
 {
-    "layer": "bottom",        // Above or below windows [top/bottom]
+    "layer": "top",        // Above or below windows [top/bottom]
     "position": "bottom",     // [top/bottom/left/right]
     "mode": "dock",           // [dock/hide/invisible/overlay]
 

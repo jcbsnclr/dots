@@ -21,12 +21,20 @@ language-servers = ["tinymist"]
 
 [[language]]
 name = "c"
-indent = { tab-width = 4, unit = "    " }
+language-id = "c"
+indent = { tab-width = 4, unit = " " }
 auto-format = true
 file-types = ["c", "h"]
+roots = ["Makefile", "GNUmakefile"]
 language-servers = ["clangd", "clang-format"]
 
 [[language]]
 name = "bash"
 shebangs = ["sh", "openrc-run"]
 
+[language-server.clangd]
+command = "clangd"
+args = [ "-header-insertion=never", "--clang-tidy" ]
+
+[language-server.clang-format]
+command = "clang-format"
