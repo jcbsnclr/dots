@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+TMP="$(mktemp -d)"
+foot -D "$TMP" tmux
+rm -rf "$TMP"

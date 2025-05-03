@@ -5,4 +5,8 @@ openrc --user gui >/dev/null 2>&1 &
 # load wallpaper
 swaybg -i "$(xdg-user-dir PICTURES)/wall.jpg" -m fill >/dev/null 2>&1 &
 
+for app in "$(ls $HOME/.config/autostart/)"; do
+  gtk-launch "$app"
+done
+
 dbus-update-activation-environment --all >/dev/null 2>&1 &

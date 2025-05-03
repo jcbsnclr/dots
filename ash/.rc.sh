@@ -130,6 +130,9 @@ alias urc-del="rc-update del --user"
 alias urc-st="rc-status --user"
 alias usv="rc-service --user"
 
+# launch gui
+alias gui="labwc-run"
+
 if [ "$USER" != "root" ]; then
   source $HOME/.cargo/env
 fi

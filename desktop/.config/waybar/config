@@ -50,7 +50,7 @@
         "ignore-list": [],
         "on-click": "activate",
         // "active-first": true,
-        "sort-by-app-id": true,
+        // "sort-by-app-id": true,
         "rewrite": {
             "^(.{16}).+$": "$1…"
         }
@@ -58,7 +58,7 @@
 
     "tray": {
         "icon-size": 21,
-        "show-passive-items": "true",
+        "show-passive-items": true,
         "spacing": 10
     },
 

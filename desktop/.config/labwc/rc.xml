@@ -80,6 +80,9 @@
     <keybind key="W-Return">
       <action name="Execute" command="foot" />
     </keybind>
+    <keybind key="W-S-Return">
+      <action name="Execute" command="scratch-term" />
+    </keybind>
     <keybind key="W-d">
       <action name="Execute" command="wmenu-run" />
     </keybind>
