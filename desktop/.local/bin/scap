@@ -1,8 +1,16 @@
 #!/usr/bin/env sh
 
+set -e 
+
 usage() {
   echo "usage: $(basename $0) [all|area|output]" 1>&2 
   exit 1
+}
+
+getgeom() {
+  if ! slurp $@; then
+    exit 1
+  fi
 }
 
 if [ "$#" -ne 1 ]; then
@@ -15,11 +23,13 @@ case "$1" in
     ;;
 
   area)
-    grim -g "$(slurp)" - | wl-copy
+    GEOM="$(getgeom)"
+    grim -g "$GEOM" - | wl-copy
     ;;
 
   output)
-    grim -g "$(slurp -o)" - | wl-copy
+    GEOM="$(getgeom -o)"
+    grim -g "$GEOM" - | wl-copy
     ;;
 
   *)

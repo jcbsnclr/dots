@@ -90,6 +90,8 @@ alias ..="cd .."
 alias ..2="cd ../.."
 alias ..3="cd ../../.."
 
+alias fm="pcmanfm-qt"
+
 # aliases for doas
 alias hxas="doas hx"
 alias rmas="doas rm -iv"
@@ -118,6 +120,8 @@ alias gck="git checkout"
 
 alias gls="exa --long --git --git-ignore"
 alias gtree="exa --tree --git --git-ignore --long --no-user -a"
+
+alias make="make -j12"
 
 # service management aliases
 alias rc-add="doas rc-update add"

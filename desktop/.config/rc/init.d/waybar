@@ -8,5 +8,6 @@ supervisor=supervise-daemon
 error_log="${HOME}/.local/state/log/${RC_SVCNAME}.log"
 
 depend() {
+	before *
 	need pipewire
 }

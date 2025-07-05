@@ -74,8 +74,18 @@
     <keybind key="W-S-8"><action name="SendToDesktop" to="8" follow="no"/></keybind>    
     <keybind key="W-S-9"><action name="SendToDesktop" to="9" follow="no"/></keybind>    
     <keybind key="W-S-0"><action name="SendToDesktop" to="10" follow="no"/></keybind>    
+
+    <keybind key="W-a">
+      <action name="ToggleMaximize" />
+    </keybind>
     
-    <default />
+    <keybind key="A-Tab">
+      <action name="NextWindow" />
+    </keybind>
+    <keybind key="A-S-Tab">
+      <action name="PreviousWindow" />
+    </keybind>
+    
     <!-- Use a different terminal emulator -->
     <keybind key="W-Return">
       <action name="Execute" command="foot" />
