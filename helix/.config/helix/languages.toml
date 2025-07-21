@@ -28,13 +28,14 @@ file-types = ["c", "h"]
 roots = ["Makefile", "GNUmakefile"]
 language-servers = ["clangd", "clang-format"]
 
-[[language]]
-name = "bash"
-shebangs = ["sh", "openrc-run"]
-
 [language-server.clangd]
 command = "clangd"
 args = [ "-header-insertion=never", "--clang-tidy" ]
 
 [language-server.clang-format]
 command = "clang-format"
+
+[[language]]
+name = "bash"
+shebangs = ["sh", "openrc-run"]
+
