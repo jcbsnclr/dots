@@ -186,10 +186,14 @@
 
     <!-- audio -->
     <keybind key="W-p">
-      <action name="Execute" command="pavucontrol" />
+      <action name="Execute" command="pavucontrol-qt" />
     </keybind>
     <keybind key="W-S-p">
       <action name="Execute" command="qpwgraph" />
+    </keybind>
+
+    <keybind key="W-n">
+      <action name="Execute" command="pkexec echo foo" />
     </keybind>
 
     <!-- screenshotting -->
