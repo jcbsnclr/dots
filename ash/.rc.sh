@@ -70,6 +70,9 @@ alias nb="newsboat"
 alias chx="chmod +x"
 alias chux="chmod u+x"
 
+alias ex="dtrx"
+alias fm="pcmanfm-qt"
+
 # packagae management
 alias fp-add="doas $FP install --system"
 alias fp-del="doas $FP uninstall --system"
@@ -117,6 +120,7 @@ alias gdf="git diff"
 alias gad="git add"
 alias grm="git rm"
 alias gck="git checkout"
+alias glg="git log"
 
 alias gls="exa --long --git --git-ignore"
 alias gtree="exa --tree --git --git-ignore --long --no-user -a"
@@ -134,9 +138,19 @@ alias urc-del="rc-update del --user"
 alias urc-st="rc-status --user"
 alias usv="rc-service --user"
 
+alias vpn-on="doas rc-service wg-quick.se-sto-wg-001 start"
+alias vpn-off="doas rc-service wg-quick.se-sto-wg-001 stop"
+
 # launch gui
 alias gui="labwc-run"
 
+alias msc="meson compile -C build/"
+alias mst="meson test -C build/"
+alias mss="meson setup build/"
+
+alias os="jack_oscrolloscope -d 0.1 -s -f 100"
+
 if [ "$USER" != "root" ]; then
   source $HOME/.cargo/env
+  export PATH="$HOME/.rustup/toolchains/nightly-x86_64-unknown-linux-musl/bin:$PATH"
 fi

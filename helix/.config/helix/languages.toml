@@ -11,6 +11,7 @@ comment-token = "//"
 injection-regex = "typ(st)?"
 roots = ["typst.toml"]
 language-servers = ["tinymist"]
+soft-wrap.enable = true
 
 [language.auto-pairs]
 '(' = ')'
