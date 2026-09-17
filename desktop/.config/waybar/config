@@ -26,8 +26,8 @@
     ],
 
     "wireplumber": {
-        "format": " {volume}%",
-        "format-muted": " MUTED",
+        "format": "<span font_family='Font Awesome 7 Free'></span> {volume}%",
+        "format-muted": "<span font_family='Font Awesome 7 Free'></span> MUTED",
         "on-click": "pavucontrol",
         "max-volume": 100,
         "scroll-step": 0
@@ -35,7 +35,7 @@
 
     "disk": {
         "interval": 30,
-        "format": " {free}",
+        "format": "<span font_family='Font Awesome 7 Free'></span> {free}",
         "path": "/home",
         "tooltip": false,
         "unit": "GB"
@@ -47,9 +47,9 @@
             "warning": 20,
             "critical": 10
         },
-        "format": "{icon} {capacity}%",
-        "format-charging": "\uf0e7 {capacity}%",
-        "format-plugged": "\uf1e6 {capacity}%",
+        "format": "<span font_family='Font Awesome 7 Free'>{icon}</span> {capacity}%",
+        "format-charging": "<span font_family='Font Awesome 7 Free'>\uf0e7</span> {capacity}%",
+        "format-plugged": "<span font_family='Font Awesome 7 Free'>\uf1e6</span> {capacity}%",
         "format-icons": ["\uf244", "\uf243", "\uf242", "\uf241", "\uf240"],
         "tooltip-format": "{timeTo} · {power}W"
     },
@@ -77,7 +77,7 @@
     },
 
     "clock": {
-        "format": " {:%Y-%m-%d │ %H:%M %Z}",
+        "format": "<span font_family='Font Awesome 7 Free'></span> {:%Y-%m-%d │ %H:%M %Z}",
         "tooltip-format": "<tt>{calendar}</tt>",
 
         "calendar": {

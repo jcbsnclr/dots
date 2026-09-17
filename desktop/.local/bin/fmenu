@@ -1,12 +1,36 @@
 #!/usr/bin/env sh
 
-# set -o pipefail
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT INT TERM
 
-RES="$(flatpak list --columns=name --app | wmenu -i)"
+IFS=:
+for d in ${XDG_DATA_HOME:-$HOME/.local/share} \
+         ${XDG_DATA_DIRS:-/usr/local/share:/usr/share}; do
+  dir="$d/applications"
+  [ -d "$dir" ] || continue
+  for f in "$dir"/*.desktop; do
+    [ -f "$f" ] || continue
+    awk -v id="$(basename "$f" .desktop)" '
+      /^\[/ { sec=$0 }
+      sec=="[Desktop Entry]" && /^Name=/      { name=substr($0,6) }
+      sec=="[Desktop Entry]" && /^Exec=/      { exec=substr($0,6) }
+      sec=="[Desktop Entry]" && /^NoDisplay=/ { nd=substr($0,11) }
+      sec=="[Desktop Entry]" && /^Hidden=/    { h=substr($0,8) }
+      sec=="[Desktop Entry]" && /^Type=/      { ty=substr($0,6) }
+      END {
+        if (name && exec && ty=="Application" && nd!="true" && h!="true")
+          print name "\t" id
+      }' "$f"
+  done
+done > "$tmp"
+unset IFS
 
-if [ -z "$RES" ]; then
-  exit 0
-fi
+awk -F'\t' '!seen[$2]++' "$tmp" > "$tmp.d" && mv "$tmp.d" "$tmp"
 
-flatpak run $(flatpak list --columns=name,ref --app | \
-grep "$RES" | cut -f 2)
+sel="$(cut -f1 "$tmp" | wmenu -i)"
+[ -z "$sel" ] && exit 0
+
+id="$(awk -F'\t' -v n="$sel" '$1==n { print $2; exit }' "$tmp")"
+[ -z "$id" ] && exit 0
+
+exec gtk-launch "$id"
