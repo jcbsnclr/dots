@@ -1,96 +1,65 @@
 #!/usr/bin/env sh
+# deploy.sh -- stow the dotfiles packages into $HOME.
 
-msg() {
-  echo $@ 1>&2
+set -eu
+
+msg() { echo "$@" 1>&2; }
+die() { msg "$@"; exit 1; }
+
+usage() {
+	die "usage: $(basename "$0") <base|helix|desktop>"
 }
 
-die() {
-  msg $@
-  exit 1
-}
-
-if [ "$#" -ne 1 ]; then
-  die "usage: ./deploy.sh [TARGET]"
-elif ! which stow >/dev/null; then
-  die "error: GNU stow not found"
-elif ! which tput >/dev/null; then
-  die "error: tput not found"
-fi
+command -v stow >/dev/null 2>&1 || die "error: GNU stow not found"
+command -v tput >/dev/null 2>&1 || die "error: tput not found"
 
 BOLD=$(tput bold)
 CYAN=$(tput setaf 6)
 NORMAL=$(tput sgr0)
 
 yesno() {
-  while true; do
-    read -p "$BOLD$CYAN$1?$NORMAL [y/N]: " tmp
+	while true; do
+		printf '%s%s?%s [y/N]: ' "$BOLD" "$CYAN$1" "$NORMAL"
+		read -r tmp
 
-    if [ -z "$tmp" ]; then 
-      ANS=n
-      break
-    fi
-    
-    case $tmp in 
-      [Yy]* ) ANS=y; break;;
-      [Nn]* ) ANS=n; break;;
-          * ) echo "please answer yes or no" 1>&2 ;;
-      
-    esac
-  done
+		case "${tmp:-n}" in
+		[Yy]*) ANS=y; return 0 ;;
+		[Nn]* | '') ANS=n; return 0 ;;
+		*) echo "please answer yes or no" 1>&2 ;;
+		esac
+	done
 }
 
-TARGET=$1
+TARGET=${1:-}
+[ -n "$TARGET" ] || usage
 
 DEPS=""
-APKS=""
+add() { DEPS="$DEPS $1"; }
 
-base() {
-  DEPS="$DEPS ash scripts"
-}
-
-helix() {
-  DEPS="$DEPS helix"
-}
-
-desktop() {
-  base
-  helix
-
-  DEPS="$DEPS desktop"
-}
-
+base() { add ash; add scripts; }
+helix() { add helix; }
+desktop() { base; helix; add desktop; }
 
 case "$TARGET" in
-  base)
-    base
-    ;;
-
-  helix)
-    helix
-    ;;
-
-  desktop)
-    desktop
-    ;;
-  
-  *)
-    die "unknown target '$TARGET'"
+base) base ;;
+helix) helix ;;
+desktop) desktop ;;
+*) die "unknown target '$TARGET'" ;;
 esac
 
 msg "$(tput bold)to install:$(tput sgr0)"
-msg -e "\t$DEPS"
+printf '\t%s\n' "$DEPS" 1>&2
 
 yesno "install config files"
 
-if [ "$ANS" = "y" ]; then
-  for dep in $DEPS; do
-    # stow $dep
-    if ! stow $dep; then
-      yesno "run stow adopt"
+if [ "$ANS" = y ]; then
+	for dep in $DEPS; do
+		if ! stow --restow "$dep"; then
+			yesno "run stow --adopt for $dep"
 
-      if [ "$ANS" = "y" ]; then
-        stow $dep --adopt
-      fi
-    fi
-  done
+			if [ "$ANS" = y ]; then
+				stow --restow --adopt "$dep"
+			fi
+		fi
+	done
 fi
