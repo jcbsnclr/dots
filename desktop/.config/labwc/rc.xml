@@ -21,7 +21,7 @@
 
   <windowRules>
     <windowRule identifier="lxqt-policykit-agent">
-      <action name="SetDecorations" decorations="border" />
+      <action name="SetDecorations" decorations="full" />
       <action name="AutoPlace" policy="center" />
       <action name="ToggleAlwaysOnTop" />
     </windowRule>
@@ -39,6 +39,7 @@
   <libinput>
     <device category="default">
       <accelProfile>flat</accelProfile>
+      <pointerSpeed>0.5</pointerSpeed>
     </device>
   </libinput>
 

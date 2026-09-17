@@ -1,6 +1,9 @@
 #!/usr/bin/env sh
 
+wlr-randr --output eDP-1 --scale 2 
+
 # start gui runlevel
+mkdir -p "$HOME/.local/state/log"
 openrc --user gui >/dev/null 2>&1 &
 # load wallpaper
 swaybg -i "$(xdg-user-dir PICTURES)/wall.jpg" -m fill >/dev/null 2>&1 &

@@ -5,12 +5,12 @@ XDG_CURRENT_DESKTOP=wlroots
 
 # env vars for wayland
 MOZ_ENABLE_WAYLAND=1
-QP_QPA_PLATFORM=wayland
+QT_QPA_PLATFORM=wayland
 SDL_VIDEODRIVER=wayland
 _JAVA_AWT_WM_NONREPARENTING=1
 
 # theming
-QT_QPA_PLATFORMTHEME=adwaita-dark
+QT_QPA_SYSTEM_ICON_THEME=Adwaita
 QT_STYLE_OVERRIDE=adwaita-dark
 # GTK_THEME=Adwaita:dark
 XCURSOR_THEME=capitaine-cursors-dark

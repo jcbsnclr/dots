@@ -20,6 +20,7 @@
     ],
 
     "modules-right": [
+        "battery",
         "tray",
         "clock"
     ],
@@ -38,6 +39,19 @@
         "path": "/home",
         "tooltip": false,
         "unit": "GB"
+    },
+
+    "battery": {
+        "interval": 30,
+        "states": {
+            "warning": 20,
+            "critical": 10
+        },
+        "format": "{icon} {capacity}%",
+        "format-charging": "\uf0e7 {capacity}%",
+        "format-plugged": "\uf1e6 {capacity}%",
+        "format-icons": ["\uf244", "\uf243", "\uf242", "\uf241", "\uf240"],
+        "tooltip-format": "{timeTo} · {power}W"
     },
 
     "wlr/taskbar": {

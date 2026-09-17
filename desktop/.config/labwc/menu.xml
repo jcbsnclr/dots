@@ -15,7 +15,7 @@
 
   <menu id="deco-menu" label="decorations">
     <item label="on">
-      <action name="SetDecorations" decorations="all" />
+      <action name="SetDecorations" decorations="full" />
     </item>
     <item label="off">
       <action name="SetDecorations" decorations="border" />

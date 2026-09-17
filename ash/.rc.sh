@@ -1,3 +1,5 @@
+export PATH="$HOME/.local/bin:$PATH"
+
 ANSI_RED="$(tput setaf 1)"
 ANSI_GREEN="$(tput setaf 2)"
 ANSI_REGULAR="$(tput sgr0)"
