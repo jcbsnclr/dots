@@ -1,3 +1,11 @@
 #!/usr/bin/env sh
-# Taken from `https://github.com/sharkdp/bat/issues/1145` @lahwaacz
-exec cat "$@" | col -bx | bat --language man --style plain --pager "$PAGER"
+# batman -- page man output through bat, stripping groff overstrikes.
+# Based on https://github.com/sharkdp/bat/issues/1145 (@lahwaacz).
+
+if command -v col >/dev/null 2>&1; then
+	col -bx | bat --language man --style plain --pager "$PAGER"
+else
+	# Fallback when col(1) is unavailable: collapse "x\bx" overstrikes,
+	# then drop any remaining backspaces.
+	sed "s/.$(printf '\b')//g" | tr -d '\b' | bat --language man --style plain --pager "$PAGER"
+fi

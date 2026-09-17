@@ -1,11 +1,21 @@
 #!/usr/bin/env sh
+# mkscript -- create a new script in the dots scripts package and link it
+# into ~/.local/bin.
 
-BINPATH="$HOME/.local/bin"
+BINPATH="${DOTS:-$HOME/dots}/scripts/.local/bin"
+LINKPATH="$HOME/.local/bin"
 
 if [ "$#" -ne 1 ]; then
-	echo "usage: $(basename $0) [NAME]"
+	echo "usage: $(basename "$0") [NAME]" 1>&2
 	exit 1
-fi 
+fi
 
-$EDITOR $BINPATH/$1 
-chmod +x $BINPATH/$1
+if [ -n "$EDITOR" ]; then
+	"$EDITOR" "$BINPATH/$1"
+else
+	vi "$BINPATH/$1"
+fi
+
+chmod +x "$BINPATH/$1"
+mkdir -p "$LINKPATH"
+ln -sf "$BINPATH/$1" "$LINKPATH/$1"

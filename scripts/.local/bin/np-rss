@@ -3,7 +3,12 @@
 # np-rss -- parses exported newpipe subscriptions into list of rss links
 
 if [ "$#" -ne 1 ]; then
-  echo "usage: $(basename $0) [FILE]" 1>&2
+  echo "usage: $(basename "$0") [FILE]" 1>&2
+  exit 1
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "np-rss: missing dependency 'jq'" 1>&2
   exit 1
 fi
 

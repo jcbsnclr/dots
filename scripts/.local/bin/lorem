@@ -1,8 +1,15 @@
 #!/usr/bin/env sh
 
-# requires aspell and english dictionary
+# lorem -- print N random english words (default 10).
+# Requires: aspell with the english dictionary, python3.
 
-MAX_LENGTH=6
-MIN_LENGTH=1
+for dep in aspell python3; do
+	if ! command -v "$dep" >/dev/null 2>&1; then
+		echo "lorem: missing dependency '$dep'" 1>&2
+		exit 1
+	fi
+done
 
-aspell -d en dump master | aspell -l en expand | python3 -c "import random, sys; print(*(x.strip() for x in random.choices(list(sys.stdin), k = ${1:-10})))"
+aspell -d en dump master \
+	| aspell -l en expand \
+	| python3 -c "import random, sys; print(*(x.strip() for x in random.choices(list(sys.stdin), k = ${1:-10})))"

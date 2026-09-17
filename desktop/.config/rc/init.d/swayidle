@@ -1,6 +1,6 @@
 #!/sbin/openrc-run
 
-description="Idle management daemon for Waylan"
+description="Idle management daemon for Wayland"
 
 command="/usr/bin/swayidle"
 command_args="-d -w -C ${SWAYIDLE_CONFIG:-$HOME/.config/swayidle/config}"

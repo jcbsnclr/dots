@@ -1,27 +1,9 @@
-export PATH="$HOME/.local/bin:$PATH"
-
 ANSI_RED="$(tput setaf 1)"
 ANSI_GREEN="$(tput setaf 2)"
 ANSI_REGULAR="$(tput sgr0)"
 
-# Setting OSC0 and OSC7 for terminal title and PWD
+# Set OSC0 for the terminal title.
 # Taken from vte.sh
-__urlencode() (
-  # This is important to make sure string manipulation is handled
-  # byte-by-byte.
-  LC_ALL=C
-  str="$1"
-  while [ -n "$str" ]; do
-    safe="${str%%[!a-zA-Z0-9/:_\.\-\!\'\(\)~]*}"
-    printf "%s" "$safe"
-    str="${str#"$safe"}"
-    if [ -n "$str" ]; then
-      printf "%%%02X" "'$str"
-      str="${str#?}"
-    fi
-  done
-)
-
 __osc_prompt_command() {
   local pwd='~'
   [ "$PWD" != "$HOME" ] && pwd=${PWD/#$HOME\//\~\/}
@@ -57,7 +39,6 @@ alias poweroff="loginctl poweroff"
 alias zzz="loginctl suspend"
 
 # misc
-alias sfwrl="killall -SIGHUP sfwbar"
 alias monrl="wlr-randr --output DP-3 --on --output DP-1 --on"
 
 # interactive and verbose aliases
@@ -94,8 +75,6 @@ alias dots="cd $HOME/dots"
 alias ..="cd .."
 alias ..2="cd ../.."
 alias ..3="cd ../../.."
-
-alias fm="pcmanfm-qt"
 
 # aliases for doas
 alias hxas="doas hx"
@@ -153,6 +132,5 @@ alias mss="meson setup build/"
 alias os="jack_oscrolloscope -d 0.1 -s -f 100"
 
 if [ "$USER" != "root" ]; then
-  source $HOME/.cargo/env
   export PATH="$HOME/.rustup/toolchains/nightly-x86_64-unknown-linux-musl/bin:$PATH"
 fi

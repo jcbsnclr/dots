@@ -1,11 +1,12 @@
 #!/usr/bin/env sh
 
-if [ "$#" -ne "1" ]; then
-  echo "usage: $0 [PATH]"
+if [ "$#" -ne 1 ]; then
+	echo "usage: $(basename "$0") [PATH]" 1>&2
+	exit 1
 fi
 
 if [ -z "$EDITOR" ]; then
-  EDITOR=vi
+	EDITOR=vi
 fi
 
 cp "$1" "$1.bak"

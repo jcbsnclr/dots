@@ -1,1 +1,17 @@
-grim -g "388,532 1x1" -t ppm - | magick - -format '%[pixel:p{0,0}]' txt:- | wl-copy
+#!/usr/bin/env sh
+# colour-picker -- copy the colour of a pixel to the clipboard.
+# Usage: colour-picker ["X,Y 1x1"]   (default: 388,532 1x1)
+# Requires: grim, ImageMagick (magick), wl-copy.
+
+for dep in grim magick wl-copy; do
+	if ! command -v "$dep" >/dev/null 2>&1; then
+		echo "colour-picker: missing dependency '$dep'" 1>&2
+		exit 1
+	fi
+done
+
+GEOM="${1:-388,532 1x1}"
+
+grim -g "$GEOM" -t ppm - \
+	| magick - -format '%[pixel:p{0,0}]' txt:- \
+	| wl-copy

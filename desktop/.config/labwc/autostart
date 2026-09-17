@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-wlr-randr --output eDP-1 --scale 2 
+wlr-randr --output eDP-1 --scale 2
 
 # start gui runlevel
 mkdir -p "$HOME/.local/state/log"

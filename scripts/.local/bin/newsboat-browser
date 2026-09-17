@@ -1,31 +1,39 @@
 #!/usr/bin/env sh
 
-# newsboat-browser -- dispatches opened newsboat urls to correct app
+# newsboat-browser -- dispatch URLs opened in newsboat to the right app.
+# Requires: mpv (youtube), firefox (fallback).
 
 if [ "$#" -ne 1 ]; then
-  echo "usage: $(basename $0) [URL]"
+	echo "usage: $(basename "$0") [URL]" 1>&2
+	exit 1
 fi
-
-# expr "$1" : 'https://www\.youtube\.com/v' && echo youtube
 
 URL="$1"
 
 notify() {
-  ICON="$HOME/.local/share/icons/$1.png"
+	ICON="$HOME/.local/share/icons/$1.png"
 
-  notify-send -i "$ICON" "Newsboat" "Opening URL $URL in $1" -t 3000
+	if [ -f "$ICON" ]; then
+		notify-send -i "$ICON" "Newsboat" "Opening $URL in $1" -t 3000
+	else
+		notify-send "Newsboat" "Opening $URL in $1" -t 3000
+	fi
 }
 
 rule() {
-  REGEX="$1"
-  HANDLER="$2"
+	REGEX="$1"
+	HANDLER="$2"
 
-  if expr "$URL" : "$REGEX"; then 
-    notify "$HANDLER"
-    $HANDLER "$URL" &  
+	if expr "$URL" : "$REGEX" >/dev/null; then
+		if ! command -v "$HANDLER" >/dev/null 2>&1; then
+			echo "newsboat-browser: missing handler '$HANDLER' for $URL" 1>&2
+			exit 1
+		fi
 
-    exit
-  fi
+		notify "$HANDLER"
+		"$HANDLER" "$URL" &
+		exit 0
+	fi
 }
 
 rule 'https://www\.youtube\.com/' mpv
