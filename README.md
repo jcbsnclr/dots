@@ -142,6 +142,8 @@ Keybinds (`W` = Super):
 | `W-h/j/k/l`, `W-S-h/j/k/l`, `W-C-h/j/k/l` | move / grow / shrink to edge |
 | `W-S-space` | grow to all edges |
 | `W-KP_7..3`, `W-S-KP_*` | snap to region / region corner |
+| `W-A-h/j/k/l`, `W-A-c` | snap to left/bottom/top/right half, centre (no-numpad) |
+| `W-A-u/i/n/m`, `W-A-S-u/i/n/m` | snap to quadrant / quadrant corner (no-numpad) |
 | `Print`, `S-Print`, `W-Print` | `scap all` / `output` / `area` |
 | `XF86Audio*`, `XF86MonBrightness*` | `osd` volume/mic/brightness |
 | `W-S-i`, `W-Escape` | `caffeine` (idle inhibit), `lock` |

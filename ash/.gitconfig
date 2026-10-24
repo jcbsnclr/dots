@@ -3,7 +3,7 @@
 # Please adapt and uncomment the following lines:
 	name = jacob
 	email = jcbsnclr@outlook.com
-	signingkey = D09CD86FD3DD842
+	signingkey = 3734C806584B60AE6E1A43F7D09CD86FD3DD842C
 [commit]
 	gpgsign = true
 [tag]

@@ -226,6 +226,23 @@
     <keybind key="W-S-KP_End"><action name="SnapToRegion" region="bottom-left-corner" /></keybind>
     <keybind key="W-S-KP_Next"><action name="SnapToRegion" region="bottom-right-corner" /></keybind>
 
+    <!-- laptop fallback: same snap regions without a numpad -->
+    <keybind key="W-A-h"><action name="SnapToRegion" region="left" /></keybind>
+    <keybind key="W-A-l"><action name="SnapToRegion" region="right" /></keybind>
+    <keybind key="W-A-k"><action name="SnapToRegion" region="top" /></keybind>
+    <keybind key="W-A-j"><action name="SnapToRegion" region="bottom" /></keybind>
+    <keybind key="W-A-c"><action name="SnapToRegion" region="center" /></keybind>
+
+    <keybind key="W-A-u"><action name="SnapToRegion" region="top-left" /></keybind>
+    <keybind key="W-A-i"><action name="SnapToRegion" region="top-right" /></keybind>
+    <keybind key="W-A-n"><action name="SnapToRegion" region="bottom-left" /></keybind>
+    <keybind key="W-A-m"><action name="SnapToRegion" region="bottom-right" /></keybind>
+
+    <keybind key="W-A-S-u"><action name="SnapToRegion" region="top-left-corner" /></keybind>
+    <keybind key="W-A-S-i"><action name="SnapToRegion" region="top-right-corner" /></keybind>
+    <keybind key="W-A-S-n"><action name="SnapToRegion" region="bottom-left-corner" /></keybind>
+    <keybind key="W-A-S-m"><action name="SnapToRegion" region="bottom-right-corner" /></keybind>
+
     <!-- media keys: volume, microphone, brightness (with OSD) -->
     <keybind key="XF86AudioRaiseVolume">
       <action name="Execute" command="osd volume up" />
