@@ -23,6 +23,8 @@
     <windowRule identifier="lxqt-policykit-agent">
       <action name="SetDecorations" decorations="full" />
       <action name="AutoPlace" policy="center" />
+      <action name="Raise" />
+      <action name="Focus" />
       <action name="ToggleAlwaysOnTop" />
     </windowRule>
     <windowRule identifier="org.gnupg.pinentry-qt">
@@ -194,7 +196,7 @@
     </keybind>
 
     <keybind key="W-n">
-      <action name="Execute" command="pkexec echo foo" />
+      <action name="Execute" command="pkexec-id" />
     </keybind>
 
     <!-- screenshotting -->
@@ -223,6 +225,36 @@
     <keybind key="W-S-KP_Prior"><action name="SnapToRegion" region="top-right-corner" /></keybind>
     <keybind key="W-S-KP_End"><action name="SnapToRegion" region="bottom-left-corner" /></keybind>
     <keybind key="W-S-KP_Next"><action name="SnapToRegion" region="bottom-right-corner" /></keybind>
+
+    <!-- media keys: volume, microphone, brightness (with OSD) -->
+    <keybind key="XF86AudioRaiseVolume">
+      <action name="Execute" command="osd volume up" />
+    </keybind>
+    <keybind key="XF86AudioLowerVolume">
+      <action name="Execute" command="osd volume down" />
+    </keybind>
+    <keybind key="XF86AudioMute">
+      <action name="Execute" command="osd volume mute" />
+    </keybind>
+    <keybind key="XF86AudioMicMute">
+      <action name="Execute" command="osd mic mute" />
+    </keybind>
+    <keybind key="XF86MonBrightnessUp">
+      <action name="Execute" command="osd brightness up" />
+    </keybind>
+    <keybind key="XF86MonBrightnessDown">
+      <action name="Execute" command="osd brightness down" />
+    </keybind>
+
+    <!-- caffeine: toggle idle inhibitor (screen stays on) -->
+    <keybind key="W-S-i">
+      <action name="Execute" command="caffeine" />
+    </keybind>
+
+    <!-- lock session (screen + KeePassXC) -->
+    <keybind key="W-Escape">
+      <action name="Execute" command="lock" />
+    </keybind>
   </keyboard>
 
   <regions>

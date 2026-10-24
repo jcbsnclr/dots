@@ -1,4 +1,4 @@
-timeout 300 'swaylock -f -c 000000'
-timeout 300 'keepassxc --lock'
-timeout 1800 'loginctl suspend'
-before-sleep 'swaylock -f -c 000000 && keepassxc --lock'
+timeout 60 'wlr-randr --output eDP-1 --off' resume 'wlr-randr --output eDP-1 --on'
+timeout 120 'lock'
+timeout 300 'loginctl suspend-then-hibernate'
+before-sleep 'lock'

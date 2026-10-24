@@ -1,0 +1,7 @@
+#!/bin/sh
+# wmenu-run wrapper: Adwaita dark colours (see the `wmenu` wrapper).
+exec /usr/bin/wmenu-run \
+	-N 242424 -n ffffff \
+	-M 303030 -m ffffff \
+	-S 3584e4 -s ffffff \
+	"$@"

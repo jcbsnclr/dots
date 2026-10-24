@@ -1,0 +1,55 @@
+#!/bin/sh
+# caffeine -- toggle a Wayland idle inhibitor so the screen stays on.
+# Backed by wl-inhibit (Wayland idle-inhibit protocol); labwc honours it, so
+# swayidle pauses lock/blank/hibernate while active.
+
+runtime="${XDG_RUNTIME_DIR:-}"
+if [ -z "$runtime" ] || [ ! -d "$runtime" ]; then
+	echo "caffeine: XDG_RUNTIME_DIR is not set" >&2
+	exit 1
+fi
+pidfile="$runtime/wl-inhibit.pid"
+
+notify() {
+	command -v notify-send >/dev/null 2>&1 && notify-send "$@" || true
+}
+
+valid_pid() {
+	case "$1" in
+	'' | *[!0-9]*) return 1 ;;
+	*) kill -0 "$1" 2>/dev/null ;;
+	esac
+}
+
+running() {
+	[ -f "$pidfile" ] || return 1
+	valid_pid "$(cat "$pidfile" 2>/dev/null)"
+}
+
+if running; then
+	pid=$(cat "$pidfile" 2>/dev/null || true)
+	valid_pid "$pid" && kill "$pid" 2>/dev/null
+	rm -f "$pidfile"
+	notify -a osd -i dialog-information \
+		-h string:x-canonical-private-synchronous:caffeine \
+		"Caffeine" "Off"
+else
+	rm -f "$pidfile"
+	if ! command -v wl-inhibit >/dev/null 2>&1; then
+		notify -a osd -i dialog-error "Caffeine" "wl-inhibit not found"
+		exit 1
+	fi
+
+	wl-inhibit &
+	pid=$!
+	printf '%s\n' "$pid" >"$pidfile"
+	sleep 0.2
+	if valid_pid "$pid"; then
+		notify -a osd -i dialog-information \
+			-h string:x-canonical-private-synchronous:caffeine \
+			"Caffeine" "On"
+	else
+		rm -f "$pidfile"
+		notify -a osd -i dialog-error "Caffeine" "Failed to inhibit"
+	fi
+fi

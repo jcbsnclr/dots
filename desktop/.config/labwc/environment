@@ -5,7 +5,7 @@ XDG_CURRENT_DESKTOP=wlroots
 
 # env vars for wayland
 MOZ_ENABLE_WAYLAND=1
-QT_QPA_PLATFORM=wayland
+MOZ_WAKE_LOCK_TYPE=WaylandIdleInhibit
 SDL_VIDEODRIVER=wayland
 _JAVA_AWT_WM_NONREPARENTING=1
 

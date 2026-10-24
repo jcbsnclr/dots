@@ -1,0 +1,14 @@
+#!/sbin/openrc-run
+
+description="VNC server for the labwc Wayland session"
+
+command="/usr/bin/wayvnc"
+command_args="127.0.0.1"
+
+supervisor=supervise-daemon
+respawn_delay=2
+error_log="${HOME}/.local/state/log/${RC_SVCNAME}.log"
+
+depend() {
+	need dbus
+}

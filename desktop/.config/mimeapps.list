@@ -1,0 +1,20 @@
+[Default Applications]
+x-scheme-handler/mailto=userapp-Thunderbird-UBDIW3.desktop
+x-scheme-handler/mid=userapp-Thunderbird-UBDIW3.desktop
+message/rfc822=userapp-Thunderbird-UBDIW3.desktop
+x-scheme-handler/webcal=userapp-Thunderbird-6EUIW3.desktop
+x-scheme-handler/webcals=userapp-Thunderbird-6EUIW3.desktop
+text/calendar=userapp-Thunderbird-6EUIW3.desktop
+application/x-extension-ics=userapp-Thunderbird-6EUIW3.desktop
+x-scheme-handler/net.thunderbird=userapp-Thunderbird-L2KZV3.desktop
+
+[Added Associations]
+x-scheme-handler/mailto=userapp-Thunderbird-UBDIW3.desktop;
+x-scheme-handler/mid=userapp-Thunderbird-UBDIW3.desktop;
+message/rfc822=userapp-Thunderbird-UBDIW3.desktop;
+x-scheme-handler/webcal=userapp-Thunderbird-6EUIW3.desktop;
+x-scheme-handler/webcals=userapp-Thunderbird-6EUIW3.desktop;
+text/calendar=userapp-Thunderbird-6EUIW3.desktop;
+application/x-extension-ics=userapp-Thunderbird-6EUIW3.desktop;
+x-scheme-handler/net.thunderbird=userapp-Thunderbird-L2KZV3.desktop;
+application/pdf=sioyek.desktop;

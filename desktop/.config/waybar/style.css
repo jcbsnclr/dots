@@ -82,6 +82,10 @@ tooltip {
 	border-bottom: 2px solid @content_main;
 }
 
+#custom-iwd.disconnected {
+  color: #ff5555;
+}
+
 #battery.warning {
   color: #ffcc66;
 }

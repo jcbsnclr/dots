@@ -20,10 +20,19 @@
     ],
 
     "modules-right": [
+        "custom/iwd",
         "battery",
         "tray",
         "clock"
     ],
+
+    "custom/iwd": {
+        "exec": "$HOME/.config/waybar/scripts/iwd.sh",
+        "return-type": "json",
+        "interval": 5,
+        "on-click": "iwgtk",
+        "tooltip": true
+    },
 
     "wireplumber": {
         "format": "<span font_family='Font Awesome 7 Free'></span> {volume}%",

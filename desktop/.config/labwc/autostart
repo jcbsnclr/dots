@@ -1,15 +1,36 @@
 #!/usr/bin/env sh
 
-wlr-randr --output eDP-1 --scale 2
-
 # start gui runlevel
 mkdir -p "$HOME/.local/state/log"
 openrc --user gui >/dev/null 2>&1 &
-# load wallpaper
-swaybg -i "$(xdg-user-dir PICTURES)/wall.jpg" -m fill >/dev/null 2>&1 &
 
-for app in "$(ls $HOME/.config/autostart/)"; do
-  gtk-launch "$app"
-done
+# load wallpaper
+wall="$(xdg-user-dir PICTURES)/wall.jpg"
+if [ -f "$wall" ]; then
+  swaybg -i "$wall" -m fill >/dev/null 2>&1 &
+fi
+
+if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+  # ssh clients, KeePassXC and the proxy all talk to the front socket
+  export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/keepass-ssh.sock"
+
+  # real ssh-agent (KeePassXC hands keys to this when the database is unlocked)
+  if command -v ssh-agent >/dev/null 2>&1 &&
+     [ ! -S "$XDG_RUNTIME_DIR/keepass-ssh-real.sock" ]; then
+    ssh-agent -a "$XDG_RUNTIME_DIR/keepass-ssh-real.sock" >/dev/null
+  fi
+
+  # proxy that raises the KeePassXC unlock dialog when ssh needs a locked key
+  if [ -x "$HOME/.local/bin/keepassxc-ssh-proxy" ]; then
+    "$HOME/.local/bin/keepassxc-ssh-proxy" >>"$HOME/.local/state/log/keepassxc-ssh-proxy.log" 2>&1 &
+  fi
+fi
+
+if [ -d "$HOME/.config/autostart" ]; then
+  for f in "$HOME/.config/autostart/"*.desktop; do
+    [ -e "$f" ] || continue
+    gtk-launch "$(basename "$f" .desktop)"
+  done
+fi
 
 dbus-update-activation-environment --all >/dev/null 2>&1 &

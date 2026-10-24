@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--) shift; break ;;
+		-*) shift ;;
+		*) break ;;
+	esac
+done
+
+if [ $# -eq 0 ]; then
+	exec foot
+fi
+
+exec foot -e "$@"

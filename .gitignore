@@ -2,3 +2,11 @@
 *.swp
 *~
 .DS_Store
+__pycache__/
+
+# Secrets and security state must never be committed.
+*.kdbx
+*.key
+gnupg/.gnupg/*
+!gnupg/.gnupg/gpg-agent.conf
+desktop/.gnupg/

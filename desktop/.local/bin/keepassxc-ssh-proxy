@@ -1,0 +1,298 @@
+#!/usr/bin/env python3
+"""SSH agent proxy that triggers the KeePassXC unlock dialog on demand.
+
+Listens on an SSH_AUTH_SOCK path, forwards the ssh-agent protocol to a real
+agent, and when the agent reports no identities (or a signing failure) asks
+KeePassXC to raise its unlock dialog. Once the database is unlocked KeePassXC
+pushes the keys to the agent, the pending request is retried and ssh carries
+on without the user doing anything else.
+"""
+
+import argparse
+import atexit
+import os
+import shutil
+import signal
+import socket
+import struct
+import subprocess
+import sys
+import threading
+import time
+
+SSH2_AGENTC_REQUEST_IDENTITIES = 11
+SSH2_AGENTC_SIGN_REQUEST = 13
+SSH2_AGENT_IDENTITIES_ANSWER = 12
+SSH_AGENT_FAILURE = 5
+
+MAX_MESSAGE_SIZE = 1 << 20
+
+
+def log(message):
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {message}", file=sys.stderr, flush=True)
+
+
+def recv_exact(sock, length):
+    data = b""
+    while len(data) < length:
+        chunk = sock.recv(length - len(data))
+        if not chunk:
+            return None
+        data += chunk
+    return data
+
+
+def read_message(sock):
+    header = recv_exact(sock, 4)
+    if header is None:
+        return None
+    (length,) = struct.unpack(">I", header)
+    if length > MAX_MESSAGE_SIZE:
+        raise ValueError(f"oversized agent message: {length} bytes")
+    return recv_exact(sock, length)
+
+
+def write_message(sock, payload):
+    sock.sendall(struct.pack(">I", len(payload)) + payload)
+
+
+def identities_count(agent_socket):
+    """Return the number of identities in the real agent, or None on error."""
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as agent:
+            agent.settimeout(2)
+            agent.connect(agent_socket)
+            write_message(agent, bytes([SSH2_AGENTC_REQUEST_IDENTITIES]))
+            response = read_message(agent)
+    except (OSError, ValueError):
+        return None
+
+    if not response or response[0] != SSH2_AGENT_IDENTITIES_ANSWER or len(response) < 5:
+        return None
+    return struct.unpack(">I", response[1:5])[0]
+
+
+class Unlocker:
+    def __init__(self, agent_socket, database, keepassxc, timeout):
+        self.agent_socket = agent_socket
+        self.database = database
+        self.keepassxc = keepassxc
+        self.timeout = timeout
+        self._lock = threading.Lock()
+        self._cooldown_until = 0.0
+
+    def _notify(self):
+        """Show a notification while ssh waits; returns the notification id."""
+        if not shutil.which("notify-send"):
+            return None
+        try:
+            result = subprocess.run(
+                [
+                    "notify-send",
+                    "--app-name=keepassxc-ssh-proxy",
+                    "--urgency=critical",
+                    "--expire-time=60000",
+                    "--print-id",
+                    "SSH is waiting for KeePassXC",
+                    "Unlock the database to continue",
+                ],
+                stdin=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        notification_id = result.stdout.strip()
+        return notification_id or None
+
+    def _close_notification(self, notification_id):
+        if not notification_id or not shutil.which("dbus-send"):
+            return
+        try:
+            subprocess.run(
+                [
+                    "dbus-send",
+                    "--session",
+                    "--dest=org.freedesktop.Notifications",
+                    "/org/freedesktop/Notifications",
+                    "org.freedesktop.Notifications.CloseNotification",
+                    f"uint32:{notification_id}",
+                ],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=5,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+
+    def _focus_keepassxc(self):
+        if not shutil.which("wlrctl"):
+            return
+        for _ in range(3):
+            try:
+                result = subprocess.run(
+                    ["wlrctl", "window", "focus", "org.keepassxc.KeePassXC"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=5,
+                )
+                if result.returncode == 0:
+                    return
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+            time.sleep(0.5)
+
+    def wait_for_keys(self):
+        """Make sure the agent has a key, prompting for a database unlock if not."""
+        count = identities_count(self.agent_socket)
+        if count is None:
+            log("real ssh-agent is not reachable")
+            return False
+        if count > 0:
+            return True
+
+        with self._lock:
+            # Another request may have triggered the unlock while we waited.
+            count = identities_count(self.agent_socket)
+            if count is None:
+                log("real ssh-agent is not reachable")
+                return False
+            if count > 0:
+                return True
+
+            if time.monotonic() < self._cooldown_until:
+                return False
+
+            log("no keys in agent, asking KeePassXC to unlock")
+            try:
+                subprocess.Popen(
+                    [self.keepassxc, self.database],
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            except OSError as error:
+                log(f"failed to launch KeePassXC: {error}")
+                self._cooldown_until = time.monotonic() + 5
+                return False
+
+            notification_id = self._notify()
+            try:
+                time.sleep(0.5)
+                self._focus_keepassxc()
+
+                deadline = time.monotonic() + self.timeout
+                while time.monotonic() < deadline:
+                    time.sleep(0.25)
+                    count = identities_count(self.agent_socket)
+                    if count is None:
+                        log("real ssh-agent is not reachable")
+                        return False
+                    if count > 0:
+                        log("keys loaded, resuming ssh request")
+                        return True
+
+                log(f"timed out after {self.timeout:g}s waiting for unlock")
+                self._cooldown_until = time.monotonic() + 10
+                return False
+            finally:
+                self._close_notification(notification_id)
+
+
+class Proxy:
+    def __init__(self, listen_socket, agent_socket, unlocker):
+        self.listen_socket = listen_socket
+        self.agent_socket = agent_socket
+        self.unlocker = unlocker
+
+    def serve_forever(self):
+        if os.path.exists(self.listen_socket):
+            os.unlink(self.listen_socket)
+        server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        server.bind(self.listen_socket)
+        os.chmod(self.listen_socket, 0o600)
+        server.listen(16)
+        atexit.register(self.cleanup)
+        log(f"listening on {self.listen_socket}, forwarding to {self.agent_socket}")
+        while True:
+            client, _ = server.accept()
+            threading.Thread(target=self.handle, args=(client,), daemon=True).start()
+
+    def cleanup(self):
+        try:
+            os.unlink(self.listen_socket)
+        except OSError:
+            pass
+
+    def handle(self, client):
+        try:
+            with client:
+                with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as agent:
+                    agent.connect(self.agent_socket)
+                    self.forward(client, agent)
+        except Exception as error:
+            log(f"connection error: {error!r}")
+
+    def forward(self, client, agent):
+        while True:
+            request = read_message(client)
+            if request is None:
+                return
+            write_message(agent, request)
+            response = read_message(agent)
+            if response is None:
+                return
+
+            needs_unlock = False
+            if request[0] == SSH2_AGENTC_REQUEST_IDENTITIES:
+                needs_unlock = self.identities_empty(response)
+            elif request[0] == SSH2_AGENTC_SIGN_REQUEST:
+                needs_unlock = response[0] == SSH_AGENT_FAILURE
+
+            if needs_unlock and self.unlocker.wait_for_keys():
+                write_message(agent, request)
+                retry = read_message(agent)
+                if retry is not None:
+                    response = retry
+
+            write_message(client, response)
+
+    @staticmethod
+    def identities_empty(response):
+        return response[0] == SSH2_AGENT_IDENTITIES_ANSWER and len(response) >= 5 and response[1:5] == b"\x00\x00\x00\x00"
+
+
+def parse_args():
+    runtime_dir = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--socket",
+        default=os.path.join(runtime_dir, "keepass-ssh.sock"),
+        help="socket to listen on, i.e. the value of SSH_AUTH_SOCK for clients",
+    )
+    parser.add_argument(
+        "--real-socket",
+        default=os.path.join(runtime_dir, "keepass-ssh-real.sock"),
+        help="real ssh-agent socket to forward requests to",
+    )
+    parser.add_argument("--database", default=os.path.expanduser("~/passwords.kdbx"), help="KeePassXC database to unlock")
+    parser.add_argument("--keepassxc", default="/usr/bin/keepassxc", help="path to the KeePassXC binary")
+    parser.add_argument("--timeout", type=float, default=120.0, help="seconds to wait for the unlock prompt")
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    unlocker = Unlocker(args.real_socket, args.database, args.keepassxc, args.timeout)
+    proxy = Proxy(args.socket, args.real_socket, unlocker)
+
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+    signal.signal(signal.SIGINT, lambda *_: sys.exit(0))
+
+    proxy.serve_forever()
+
+
+if __name__ == "__main__":
+    main()

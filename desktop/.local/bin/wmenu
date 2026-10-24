@@ -1,0 +1,13 @@
+#!/bin/sh
+# wmenu wrapper: Adwaita dark colours.
+#
+#   normal    bg #242424  fg #ffffff
+#   prompt    bg #303030  fg #ffffff
+#   selected  bg #3584e4  fg #ffffff   (Adwaita accent)
+#
+# Extra arguments are passed through, so callers keep working as usual.
+exec /usr/bin/wmenu \
+	-N 242424 -n ffffff \
+	-M 303030 -m ffffff \
+	-S 3584e4 -s ffffff \
+	"$@"

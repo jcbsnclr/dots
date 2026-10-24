@@ -1,0 +1,4 @@
+#!/bin/sh
+# Lock the session: lock KeePassXC first, then lock the screen.
+keepassxc --lock 2>/dev/null || true
+exec swaylock -f -c 000000

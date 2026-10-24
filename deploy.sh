@@ -3,6 +3,8 @@
 
 set -eu
 
+CDPATH= cd -- "$(dirname -- "$0")" || exit 1
+
 msg() { echo "$@" 1>&2; }
 die() { msg "$@"; exit 1; }
 
@@ -36,9 +38,20 @@ TARGET=${1:-}
 DEPS=""
 add() { DEPS="$DEPS $1"; }
 
-base() { add ash; add scripts; }
+base() { add ash; add scripts; add gnupg; }
 helix() { add helix; }
 desktop() { base; helix; add desktop; }
+
+stow_pkg() {
+	local dep
+	dep=$1
+	shift
+
+	case "$dep" in
+	gnupg) stow --target="$HOME" --no-folding "$@" "$dep" ;;
+	*) stow --target="$HOME" "$@" "$dep" ;;
+	esac
+}
 
 case "$TARGET" in
 base) base ;;
@@ -54,11 +67,12 @@ yesno "install config files"
 
 if [ "$ANS" = y ]; then
 	for dep in $DEPS; do
-		if ! stow --restow "$dep"; then
+		if ! stow_pkg "$dep" --restow; then
+			msg "warning: --adopt copies live files from \$HOME into the repo."
 			yesno "run stow --adopt for $dep"
 
 			if [ "$ANS" = y ]; then
-				stow --restow --adopt "$dep"
+				stow_pkg "$dep" --restow --adopt
 			fi
 		fi
 	done

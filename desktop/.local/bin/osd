@@ -1,0 +1,74 @@
+#!/bin/sh
+# On-screen display for media keys, shown via mako notifications.
+#
+# Usage:
+#   osd volume up|down|mute
+#   osd mic mute
+#   osd brightness up|down
+
+sink='@DEFAULT_AUDIO_SINK@'
+source='@DEFAULT_AUDIO_SOURCE@'
+step='5%'
+
+notify() {
+	# $1 icon  $2 summary  $3 body  $4 tag  $5 value(0-100)
+	notify-send -a osd -i "$1" \
+		-h "int:value:$5" \
+		-h "string:x-canonical-private-synchronous:$4" \
+		"$2" "$3"
+}
+
+case "$1" in
+volume)
+	case "$2" in
+	up)   wpctl set-volume -l 1.0 "$sink" "$step+" ;;
+	down) wpctl set-volume "$sink" "$step-" ;;
+	mute) wpctl set-mute "$sink" toggle ;;
+	*)
+		echo "usage: osd volume up|down|mute" >&2
+		exit 2
+		;;
+	esac
+	out=$(wpctl get-volume "$sink")
+	pct=$(printf '%s' "$out" | awk '{printf "%d", $2 * 100}')
+	[ "$pct" -gt 100 ] && pct=100
+	if printf '%s' "$out" | grep -q MUTED; then
+		notify audio-volume-muted Volume "Muted" volume "$pct"
+	elif [ "$pct" -eq 0 ]; then
+		notify audio-volume-muted Volume "0%" volume "$pct"
+	elif [ "$pct" -lt 34 ]; then
+		notify audio-volume-low Volume "$pct%" volume "$pct"
+	elif [ "$pct" -lt 67 ]; then
+		notify audio-volume-medium Volume "$pct%" volume "$pct"
+	else
+		notify audio-volume-high Volume "$pct%" volume "$pct"
+	fi
+	;;
+mic)
+	wpctl set-mute "$source" toggle
+	out=$(wpctl get-volume "$source")
+	if printf '%s' "$out" | grep -q MUTED; then
+		notify microphone-sensitivity-muted-symbolic Microphone "Muted" mic 0
+	else
+		notify microphone-sensitivity-high-symbolic Microphone "Unmuted" mic 100
+	fi
+	;;
+brightness)
+	case "$2" in
+	up)   brightnessctl set "$step+" >/dev/null ;;
+	down) brightnessctl set "$step-" >/dev/null ;;
+	*)
+		echo "usage: osd brightness up|down" >&2
+		exit 2
+		;;
+	esac
+	cur=$(brightnessctl get)
+	max=$(brightnessctl max)
+	pct=$(( cur * 100 / max ))
+	notify display-brightness-symbolic Brightness "$pct%" brightness "$pct"
+	;;
+*)
+	echo "usage: osd volume up|down|mute | mic mute | brightness up|down" >&2
+	exit 2
+	;;
+esac

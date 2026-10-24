@@ -1,0 +1,287 @@
+#!/bin/sh
+# limine-gen -- generate /boot/EFI/limine/limine.conf on Alpine Linux.
+#
+# Discovers every installed kernel under /lib/modules, pairs it with
+# /boot/vmlinuz-<flavour> and /boot/initramfs-<flavour> (the same names
+# mkinitfs uses) and writes a Limine configuration with BLAKE2b-512
+# checksums for kernel, CPU microcode, and initramfs.
+#
+# Requirements: Alpine Linux, UEFI, /boot must be the FAT EFI system
+# partition (Limine can only read FAT). Checksums need python3.
+#
+# Modes:
+#   limine-gen            generate the config (root)
+#   limine-gen --mock     print the config to stdout; no root, no writes
+#   limine-gen --check    diff the on-disk config against a fresh one
+#
+# Configuration is read from /etc/conf.d/limine-gen if it exists.
+# Generated entries:
+#   - one "protocol: linux" entry per installed kernel, hashed
+#   - optional checksum-less recovery entry per kernel
+#   - optional GRUB chainload entry
+
+set -eu
+
+# Run with a predictable PATH: this script may be invoked as root via doas.
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+conf_file=${LIMINE_GEN_CONF:-/etc/conf.d/limine-gen}
+if [ -r "$conf_file" ]; then
+	. "$conf_file"
+fi
+
+: "${CMDLINE:=}"
+: "${TIMEOUT:=3}"
+: "${HASHES:=yes}"
+: "${RECOVERY:=yes}"
+: "${CHAINLOAD_GRUB:=yes}"
+: "${GRUB_LOADER:=/EFI/grub/grub-standalone.efi}"
+: "${BOOT_DIR:=/boot}"
+: "${MODULES_DIR:=/lib/modules}"
+: "${EFI_SRC:=/usr/share/limine/BOOTX64.EFI}"
+: "${CONF_DIR:=$BOOT_DIR/EFI/limine}"
+: "${CONF:=$CONF_DIR/limine.conf}"
+: "${EFI_DST:=$CONF_DIR/BOOTX64.EFI}"
+: "${LOG:=/var/log/limine-gen.log}"
+
+warn() { printf 'limine-gen: %s\n' "$*" >&2; }
+die() { warn "$*"; exit 1; }
+
+usage() {
+	cat <<'EOF'
+usage: limine-gen [--mock | --check | --help]
+
+  (no option)   generate and install /boot/EFI/limine/limine.conf (root)
+  --mock, -n    print the configuration to stdout; no root, no writes
+  --check, -c   compare the installed configuration with a fresh one
+  --help, -h    show this help
+EOF
+}
+
+mode=generate
+case "${1:-}" in
+	--mock | -n) mode=mock ;;
+	--check | -c) mode=check ;;
+	--help | -h) usage; exit 0 ;;
+	'') ;;
+	*) usage >&2; exit 2 ;;
+esac
+
+mount_fstype() {
+	awk -v p="$1" '$2 == p { fstype = $3 } END { print fstype }' /proc/mounts
+}
+
+[ -d "$MODULES_DIR" ] || die "no $MODULES_DIR"
+[ -r /proc/cmdline ] || die "cannot read /proc/cmdline"
+
+boot_fstype=$(mount_fstype "$BOOT_DIR")
+if [ "$mode" = mock ]; then
+	[ "$boot_fstype" = vfat ] || warn "$BOOT_DIR is ${boot_fstype:-not a mount point}; Limine can only read FAT"
+else
+	[ -n "$boot_fstype" ] || die "$BOOT_DIR is not a mount point"
+	[ "$boot_fstype" = vfat ] || die "Limine can only read FAT: $BOOT_DIR is $boot_fstype"
+fi
+if [ "$mode" = generate ]; then
+	[ "$(id -u)" -eq 0 ] || die "must be run as root (use --mock to preview)"
+fi
+if [ "$HASHES" = yes ]; then
+	command -v python3 >/dev/null 2>&1 || die "python3 is required for checksums (apk add python3)"
+fi
+
+# ---------------------------------------------------------------- discovery
+
+running=$(uname -r)
+runf=${running##*-}
+
+kernels=""
+count=0
+for d in "$MODULES_DIR"/*; do
+	[ -d "$d" ] || continue
+	v=${d##*/}
+	f=${v##*-}
+	k="$BOOT_DIR/vmlinuz-$f"
+	i="$BOOT_DIR/initramfs-$f"
+	if [ ! -f "$k" ]; then
+		warn "skip $v: missing $k"
+		continue
+	fi
+	if [ ! -f "$i" ]; then
+		warn "skip $v: missing $i"
+		continue
+	fi
+	case " $kernels " in
+		*" $f:$v "*) warn "skip $v: duplicate flavour $f"; continue ;;
+	esac
+	kernels="$kernels $f:$v"
+	count=$((count + 1))
+done
+kernels=${kernels# }
+[ "$count" -gt 0 ] || die "no kernel/initramfs pairs found under $BOOT_DIR"
+
+# running kernel first, remaining kernels in discovery order
+first=""
+others=""
+for kv in $kernels; do
+	if [ -z "$first" ] && [ "${kv%%:*}" = "$runf" ]; then
+		first=$kv
+	else
+		others="$others $kv"
+	fi
+done
+if [ -z "$first" ]; then
+	first=${kernels%% *}
+	rest=${kernels#* }
+	[ "$rest" = "$kernels" ] && rest=""
+	others=${rest:+ $rest}
+fi
+ordered="$first$others"
+
+ucode=""
+vendor=$(awk -F': ' '/^vendor_id/ { print $2; exit }' /proc/cpuinfo 2>/dev/null || true)
+case "$vendor" in
+	GenuineIntel)
+		if [ -f "$BOOT_DIR/intel-ucode.img" ]; then ucode="$BOOT_DIR/intel-ucode.img"; fi
+		;;
+	AuthenticAMD | HygonGenuine)
+		if [ -f "$BOOT_DIR/amd-ucode.img" ]; then ucode="$BOOT_DIR/amd-ucode.img"; fi
+		;;
+esac
+
+if [ -n "$CMDLINE" ]; then
+	raw_cmdline=$CMDLINE
+else
+	raw_cmdline=$(cat /proc/cmdline)
+fi
+cmdline=""
+for tok in $raw_cmdline; do
+	case "$tok" in
+		BOOT_IMAGE=* | initrd=*) continue ;;
+	esac
+	cmdline="$cmdline $tok"
+done
+cmdline=${cmdline# }
+case " $cmdline " in
+	*" root="*) ;;
+	*) warn "no root= in the kernel command line; the entry may not boot" ;;
+esac
+
+# ---------------------------------------------------------------- helpers
+
+if [ "$HASHES" = yes ]; then
+	hash_suffix() {
+		printf '#%s' "$(python3 -c '
+import hashlib, sys
+h = hashlib.blake2b()
+with open(sys.argv[1], "rb") as f:
+    for chunk in iter(lambda: f.read(1048576), b""):
+        h.update(chunk)
+print(h.hexdigest())
+' "$1")"
+	}
+else
+	hash_suffix() { :; }
+fi
+
+# ---------------------------------------------------------------- rendering
+
+render() {
+	printf '# Generated by limine-gen -- do not edit.\n'
+	printf 'timeout: %s\n' "$TIMEOUT"
+	printf 'default_entry: %s\n' "$(entry_title "${first%%:*}" "${first#*:}")"
+	printf 'hash_mismatch_panic: yes\n'
+	printf '\n'
+
+	for kv in $ordered; do
+		f=${kv%%:*}
+		v=${kv#*:}
+		printf '/%s\n' "$(entry_title "$f" "$v")"
+		printf '    protocol: linux\n'
+		printf '    kernel_path: boot():/vmlinuz-%s%s\n' "$f" "$(hash_suffix "$BOOT_DIR/vmlinuz-$f")"
+		if [ -n "$ucode" ]; then
+			printf '    module_path: boot():/%s%s\n' "${ucode##*/}" "$(hash_suffix "$ucode")"
+		fi
+		printf '    module_path: boot():/initramfs-%s%s\n' "$f" "$(hash_suffix "$BOOT_DIR/initramfs-$f")"
+		printf '    cmdline: %s\n' "$cmdline"
+		printf '\n'
+	done
+
+	if [ "$RECOVERY" = yes ]; then
+		for kv in $ordered; do
+			f=${kv%%:*}
+			v=${kv#*:}
+			printf '/%s\n' "$(entry_title "$f" "$v") [no checksums]"
+			printf '    protocol: linux\n'
+			printf '    kernel_path: boot():/vmlinuz-%s\n' "$f"
+			if [ -n "$ucode" ]; then
+				printf '    module_path: boot():/%s\n' "${ucode##*/}"
+			fi
+			printf '    module_path: boot():/initramfs-%s\n' "$f"
+			printf '    cmdline: %s\n' "$cmdline"
+			printf '\n'
+		done
+	fi
+
+	if [ "$CHAINLOAD_GRUB" = yes ] && [ -f "$BOOT_DIR$GRUB_LOADER" ]; then
+		printf '/GRUB (fallback)\n'
+		printf '    protocol: efi\n'
+		printf '    path: boot():%s\n' "$GRUB_LOADER"
+		printf '\n'
+	fi
+}
+
+entry_title() {
+	printf 'Alpine Linux (%s, %s)' "$1" "$2"
+}
+
+log() {
+	mkdir -p "${LOG%/*}" 2>/dev/null || true
+	printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >>"$LOG" 2>/dev/null || true
+}
+
+# ---------------------------------------------------------------- modes
+
+case "$mode" in
+mock)
+	render
+	;;
+check)
+	[ -f "$CONF" ] || die "$CONF does not exist"
+	tmp=$(mktemp "${TMPDIR:-/tmp}/limine-gen.XXXXXX")
+	trap 'rm -f "$tmp"' EXIT INT TERM
+	render >"$tmp"
+	if cmp -s "$tmp" "$CONF"; then
+		rm -f "$tmp"
+		printf 'limine-gen: %s is up to date\n' "$CONF"
+	else
+		diff -u "$CONF" "$tmp" || true
+		rm -f "$tmp"
+		die "$CONF is out of date"
+	fi
+	;;
+generate)
+	mkdir -p "$CONF_DIR"
+	if [ -f "$EFI_SRC" ]; then
+		if [ ! -f "$EFI_DST" ] || ! cmp -s "$EFI_SRC" "$EFI_DST"; then
+			cp "$EFI_SRC" "$EFI_DST" || die "cannot install $EFI_DST"
+			log "installed EFI binary from $EFI_SRC"
+		fi
+	elif [ ! -f "$EFI_DST" ]; then
+		die "neither $EFI_SRC nor $EFI_DST exists (apk add limine-efi-x86_64)"
+	fi
+
+	tmp=$(mktemp "$CONF.tmp.XXXXXX")
+	trap 'rm -f "$tmp"' EXIT INT TERM
+	render >"$tmp"
+	if [ -f "$CONF" ] && cmp -s "$tmp" "$CONF"; then
+		rm -f "$tmp"
+		result=unchanged
+	else
+		sync
+		mv "$tmp" "$CONF"
+		result=updated
+	fi
+	log "$result ($count kernel(s): $(printf '%s' "$ordered" | tr ':' ' '))"
+	printf 'limine-gen: %s %s\n' "$result" "$CONF"
+	;;
+esac

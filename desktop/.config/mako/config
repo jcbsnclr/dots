@@ -1,0 +1,2 @@
+# Notifications that do not set their own timeout get this (mako default is 0 = never expire).
+default-timeout=5000

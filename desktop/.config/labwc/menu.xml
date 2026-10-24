@@ -62,9 +62,6 @@
     <item label="reboot">
       <action name="Execute" command="loginctl reboot" />
     </item>
-    <item label="reboot (windows)">
-      <action name="Execute" command="pkexec rbwin" />
-    </item>
     <item label="reboot (firmware)">
       <action name="Execute" command="loginctl reboot --firmware-setup" />
     </item>

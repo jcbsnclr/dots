@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+eecho() {
+  echo "$@" 1>&2
+}
+
+if [ "$#" -ne 1 ]; then
+  eecho "usage: $(basename "$0") [CODE]"
+  exit 1
+fi
+
+mullvad relay set location "$1" && mullvad reconnect

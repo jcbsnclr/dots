@@ -1,0 +1,200 @@
+#!/bin/sh
+# bat% -- show the battery charge and the time left to drain or charge.
+#
+# Mirrors the waybar "battery" module: the same Font Awesome icons, the same
+# warning (<20%) and critical (<10%) colours, and the {timeTo} · {power}W
+# tooltip. Values are read from the first BAT* device in /sys/class/power_supply,
+# falling back to upower only for the wattage.
+#
+# usage: bat% [-h]
+
+set -eu
+
+# Font Awesome 7 glyphs, matching format-icons / format-charging / format-plugged.
+ICON_EMPTY='\357\211\204'   # U+F244 battery-empty
+ICON_QUARTER='\357\211\203' # U+F243 battery-quarter
+ICON_HALF='\357\211\202'    # U+F242 battery-half
+ICON_THREEQ='\357\211\201'  # U+F241 battery-three-quarters
+ICON_FULL='\357\211\200'    # U+F240 battery-full
+ICON_BOLT='\357\203\247'    # U+F0E7 bolt
+ICON_PLUG='\357\207\246'    # U+F1E6 plug
+
+# Colours from style.css.
+C_WARN='\033[33m' # #ffcc66
+C_CRIT='\033[31m' # #ff5555
+C_OFF='\033[0m'
+
+prog=$(basename "$0")
+
+usage() {
+	echo "usage: $prog [-h]"
+	echo
+	echo "Show the battery charge and the estimated time left to drain or charge,"
+	echo "mirroring the waybar battery indicator."
+}
+
+case "${1:-}" in
+-h | --help)
+	usage
+	exit 0
+	;;
+'') ;;
+*)
+	echo "$prog: unexpected argument '$1'" >&2
+	usage >&2
+	exit 1
+	;;
+esac
+
+read_sys() {
+	if [ -r "$1" ]; then
+		cat "$1"
+	fi
+}
+
+fmt_time() {
+	# $1 -- whole seconds -> "3h 31m", "45m" or "1d 2h".
+	secs=$1
+	hrs=$((secs / 3600))
+	min=$(((secs % 3600) / 60))
+	if [ "$hrs" -ge 24 ]; then
+		printf '%dd %dh' "$((hrs / 24))" "$((hrs % 24))"
+	elif [ "$hrs" -gt 0 ]; then
+		printf '%dh %02dm' "$hrs" "$min"
+	else
+		printf '%dm' "$min"
+	fi
+}
+
+fmt_power() {
+	# $1 -- microwatts -> "10.3".
+	awk -v uw="$1" 'BEGIN { printf "%.1f", uw / 1000000 }'
+}
+
+battery=''
+for d in /sys/class/power_supply/BAT*; do
+	if [ -r "$d/capacity" ]; then
+		battery=$d
+		break
+	fi
+done
+if [ -z "$battery" ]; then
+	echo "$prog: no battery found" >&2
+	exit 1
+fi
+
+capacity=$(read_sys "$battery/capacity")
+status=$(read_sys "$battery/status")
+[ -n "$capacity" ] || capacity=0
+
+now=''
+full=''
+power=''
+current=''
+unit=''
+
+if [ -r "$battery/energy_now" ]; then
+	unit=energy
+	now=$(read_sys "$battery/energy_now")
+	full=$(read_sys "$battery/energy_full")
+	power=$(read_sys "$battery/power_now")
+elif [ -r "$battery/charge_now" ]; then
+	unit=charge
+	now=$(read_sys "$battery/charge_now")
+	full=$(read_sys "$battery/charge_full")
+	current=$(read_sys "$battery/current_now")
+	volt=$(read_sys "$battery/voltage_now")
+	if [ -n "$current" ] && [ -n "$volt" ]; then
+		power=$((current * volt / 1000000))
+	fi
+fi
+
+# upower fallback for the wattage if the kernel does not expose it.
+if [ -z "$power" ] || [ "$power" -le 0 ] 2>/dev/null; then
+	if command -v upower >/dev/null 2>&1; then
+		dev=$(upower -e 2>/dev/null | grep -m1 battery || true)
+		if [ -n "$dev" ]; then
+			power=$(upower -i "$dev" 2>/dev/null |
+				awk '/energy-rate:/ { printf "%d", $2 * 1000000 }')
+		fi
+	fi
+fi
+
+drain=''
+charge=''
+if [ -n "$now" ] && [ -n "$full" ]; then
+	case "$unit" in
+	energy)
+		if [ -n "$power" ] && [ "$power" -gt 0 ]; then
+			drain=$((now * 3600 / power))
+			charge=$(((full - now) * 3600 / power))
+		fi
+		;;
+	charge)
+		if [ -n "$current" ] && [ "$current" -gt 0 ]; then
+			drain=$((now * 3600 / current))
+			charge=$(((full - now) * 3600 / current))
+		fi
+		;;
+	esac
+fi
+
+pick_icon() {
+	if [ "$capacity" -lt 20 ]; then
+		printf '%s' "$ICON_EMPTY"
+	elif [ "$capacity" -lt 40 ]; then
+		printf '%s' "$ICON_QUARTER"
+	elif [ "$capacity" -lt 60 ]; then
+		printf '%s' "$ICON_HALF"
+	elif [ "$capacity" -lt 80 ]; then
+		printf '%s' "$ICON_THREEQ"
+	else
+		printf '%s' "$ICON_FULL"
+	fi
+}
+
+case "$status" in
+Charging)
+	icon=$ICON_BOLT
+	if [ -n "$charge" ]; then
+		detail="$(fmt_time "$charge") until full"
+	else
+		detail='charging'
+	fi
+	;;
+Full | "Not charging")
+	icon=$ICON_PLUG
+	detail='plugged in'
+	;;
+*)
+	icon=$(pick_icon)
+	if [ -n "$drain" ]; then
+		detail="$(fmt_time "$drain") left"
+	else
+		detail='estimating…'
+	fi
+	;;
+esac
+
+colour=''
+if [ -t 1 ]; then
+	case "$status" in
+	Charging | Full | "Not charging") ;;
+	*)
+		if [ "$capacity" -le 10 ]; then
+			colour=$C_CRIT
+		elif [ "$capacity" -le 20 ]; then
+			colour=$C_WARN
+		fi
+		;;
+	esac
+fi
+
+printf '%b' "$colour"
+printf '%b %s%%' "$icon" "$capacity"
+printf '%b' "$C_OFF"
+printf ' · %s' "$detail"
+if [ -n "$power" ] && [ "$power" -gt 0 ] 2>/dev/null; then
+	printf ' · %sW' "$(fmt_power "$power")"
+fi
+printf '\n'

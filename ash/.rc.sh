@@ -7,18 +7,22 @@ ANSI_REGULAR="$(tput sgr0)"
 __osc_prompt_command() {
   local pwd='~'
   [ "$PWD" != "$HOME" ] && pwd=${PWD/#$HOME\//\~\/}
-  printf "\[\033]0;%s@%s:%s\]" "${USER}" "${HOSTNAME%%.*}" "${PWD}" 
+  printf '\033]0;%s@%s:%s\a' "${USER}" "${HOSTNAME%%.*}" "$pwd"
 }
 
 ps1_prompt_colour() {
-  [ "$USER" = "root" ] && echo "\[$ANSI_RED\]" || echo "\[$ANSI_GREEN\]"
+  [ "$USER" = "root" ] && printf '%s' "$ANSI_RED" || printf '%s' "$ANSI_GREEN"
 }
 
 ps1_prompt_char() {
   [ "$USER" = "root" ] && echo "#" || echo "\$"
 }
 
-export PS1='$(__osc_prompt_command)$(ps1_prompt_colour)[\u@\h \w]\[$ANSI_REGULAR\] $(ps1_prompt_char) '
+export PS1='\[$(__osc_prompt_command)\]\[$(ps1_prompt_colour)\][\u@\h \w]\[$ANSI_REGULAR\] $(ps1_prompt_char) '
+
+if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+  export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/keepass-ssh.sock"
+fi
 
 export EDITOR=hx
 export BROWSER=firefox
@@ -31,12 +35,10 @@ export MANPAGER=batman
 
 export GRIM_DEFAULT_DIR=$HOME/media/pictures/screenshots
 
-FP="$(which flatpak)"
-
 # power management aliases
 alias reboot="loginctl reboot"
 alias poweroff="loginctl poweroff"
-alias zzz="loginctl suspend"
+alias zzz="loginctl hibernate"
 
 # misc
 alias monrl="wlr-randr --output DP-3 --on --output DP-1 --on"
@@ -56,11 +58,13 @@ alias chux="chmod u+x"
 alias ex="dtrx"
 alias fm="pcmanfm-qt"
 
-# packagae management
-alias fp-add="doas $FP install --system"
-alias fp-del="doas $FP uninstall --system"
-alias fp-upd="doas $FP update --system"
-alias fp-run="$FP run"
+# package management
+if command -v flatpak >/dev/null 2>&1; then
+  alias fp-add="doas flatpak install --system"
+  alias fp-del="doas flatpak uninstall --system"
+  alias fp-upd="doas flatpak update --system"
+  alias fp-run="flatpak run"
+fi
 
 # navigation
 alias aports="cd $HOME/aports"
@@ -131,6 +135,10 @@ alias mss="meson setup build/"
 
 alias os="jack_oscrolloscope -d 0.1 -s -f 100"
 
+alias oracle="opencode"
+
 if [ "$USER" != "root" ]; then
   export PATH="$HOME/.rustup/toolchains/nightly-x86_64-unknown-linux-musl/bin:$PATH"
 fi
+export HELIX_RUNTIME="$HOME/src/helix/runtime"
+alias mvd='mullvad'

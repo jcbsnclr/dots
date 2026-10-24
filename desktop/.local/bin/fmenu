@@ -33,4 +33,4 @@ sel="$(cut -f1 "$tmp" | wmenu -i)"
 id="$(awk -F'\t' -v n="$sel" '$1==n { print $2; exit }' "$tmp")"
 [ -z "$id" ] && exit 0
 
-exec gtk-launch "$id"
+exec gtk-launch "$id.desktop"

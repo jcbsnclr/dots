@@ -1,0 +1,3 @@
+#!/bin/sh
+# Popup test binding: run id as root via the GUI polkit agent.
+exec pkexec-gui /usr/bin/id

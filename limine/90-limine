@@ -1,0 +1,6 @@
+#!/bin/sh
+# Regenerate the Limine configuration after apk commits (kernel, mkinitfs,
+# intel-ucode, and limine package updates).  apk passes the stage name as $1.
+[ "$1" = post-commit ] || exit 0
+[ -x /usr/local/sbin/limine-gen ] || exit 0
+exec /usr/local/sbin/limine-gen

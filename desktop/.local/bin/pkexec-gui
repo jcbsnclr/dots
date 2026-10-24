@@ -1,0 +1,6 @@
+#!/bin/sh
+# Run a command as root via polkit and force the GUI authentication agent.
+# stdin/stdout/stderr are detached from the controlling VT, otherwise pkexec
+# uses its tty-based text agent (whose prompt is invisible under Wayland).
+# Note: output is discarded; use `foot -e doas ...` for CLI commands.
+pkexec --disable-internal-agent "$@" </dev/null >/dev/null 2>&1
