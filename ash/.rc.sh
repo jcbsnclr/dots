@@ -20,7 +20,9 @@ ps1_prompt_char() {
 
 export PS1='\[$(__osc_prompt_command)\]\[$(ps1_prompt_colour)\][\u@\h \w]\[$ANSI_REGULAR\] $(ps1_prompt_char) '
 
-if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+# local sessions use the KeePassXC unlock proxy; ssh sessions keep their
+# forwarded agent and never raise an unlock dialog on this machine's screen
+if [ -n "${XDG_RUNTIME_DIR:-}" ] && [ -z "${SSH_CONNECTION:-}" ]; then
   export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/keepass-ssh.sock"
 fi
 
