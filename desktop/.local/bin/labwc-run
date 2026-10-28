@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+# labwc-run -- start labwc in its own D-Bus session (the `gui` alias).
+# When labwc exits, drop the user services back to the default runlevel so
+# the gui services (waybar, mako, swayidle, ...) stop with the session.
+
+dbus-run-session labwc "$@"
+openrc --user default

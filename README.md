@@ -263,6 +263,7 @@ open `root-menu`.
 | `scratch-term` | Throwaway `foot` + `tmux` in a temp dir. |
 | `wmenu`, `wmenu-run` | Wrappers forcing the Adwaita-dark palette on `wmenu`/`wmenu-run`. |
 | `xdg-terminal-exec` | Minimal `xdg-terminal-exec`: runs `foot` (or `foot -e CMD`). |
+| `labwc-run` | Session launcher behind the `gui` alias: `dbus-run-session labwc`, then `openrc --user default` on exit so the `gui` services stop. |
 
 `wl-inhibit` (a small Wayland idle-inhibitor) is built from
 `desktop/.local/src/wl-inhibit.c`; the binary itself is not tracked:
