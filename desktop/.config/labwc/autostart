@@ -4,6 +4,15 @@
 mkdir -p "$HOME/.local/state/log"
 openrc --user gui >/dev/null 2>&1 &
 
+# GTK4/libadwaita apps and the settings portal (Firefox) read these, not
+# gtk-*/settings.ini
+if command -v gsettings >/dev/null 2>&1; then
+  gsettings set org.gnome.desktop.interface color-scheme prefer-dark
+  gsettings set org.gnome.desktop.interface cursor-theme capitaine-cursors-dark
+  gsettings set org.gnome.desktop.interface cursor-size 24
+  gsettings set org.gnome.desktop.interface icon-theme Adwaita
+fi
+
 # load wallpaper
 wall="$(xdg-user-dir PICTURES)/wall.jpg"
 if [ -f "$wall" ]; then
