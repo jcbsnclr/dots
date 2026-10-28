@@ -51,6 +51,7 @@ dots/
 │   │   └── wlroots-mimeapps.list  PDF default
 │   ├── .gtkrc-2.0         legacy GTK2 settings
 │   ├── .local/bin/        desktop-only scripts
+│   ├── .local/share/fonts/  APL386.ttf (public domain, not packaged by Alpine)
 │   ├── .local/share/themes/gnoblin-labwc/
 │   │   └── openbox-3/     dark window theme (themerc + titlebar XBMs)
 │   └── .local/src/        wl-inhibit.c (idle-inhibitor helper source)
@@ -67,8 +68,9 @@ dots/
 the whole `labwc`, `waybar`, `kanshi`, `swayidle` and `rc` directories).
 `gtk-3.0`/`gtk-4.0` are the exception: those directories are real (they also
 hold Breeze-generated CSS/assets), so only `settings.ini` is stowed. Likewise
-`~/.local/share` is a real directory and only `themes/gnoblin-labwc` is
-linked, so application data never lands in the repo.
+`~/.local/share` and `~/.local/share/fonts` are real directories and only
+`themes/gnoblin-labwc` and `fonts/APL386.ttf` are linked, so application data
+and other fonts never land in the repo.
 The `gnupg` package contains only `.gnupg/gpg-agent.conf` and is stowed with
 `--no-folding`; the keyring itself stays in the real `~/.gnupg`.
 
@@ -81,8 +83,9 @@ The `gnupg` package contains only `.gnupg/gpg-agent.conf` and is stowed with
 ```
 
 `deploy.sh` prints the packages, asks for confirmation, creates the real
-directories apps write into (`~/.local/{bin,share,state}`,
-`~/.config/gtk-{3,4}.0`) so stow cannot fold them into the repo, then runs
+directories apps write into (`~/.local/{bin,share,state}`, `~/.local/share/fonts`,
+`~/.config/gtk-{3,4}.0`, `~/.config/helix`) so stow cannot fold them into the
+repo, then runs
 `stow --restow`; the `gnupg` package uses `--no-folding`. If a real file blocks
 a link it offers `stow --adopt` (with a warning, since that copies live files
 from `$HOME` into the repo). The `attic` package is never deployed.
@@ -92,7 +95,7 @@ from `$HOME` into the repo). The `attic` package is never deployed.
 | File | What it does |
 | ---- | ------------ |
 | `.profile` | Adds `~/.local/bin` and `~/.opencode/bin` to `PATH`, sources `~/.cargo/env` when present, sets `ENV="$HOME/.rc.sh"` (ash reads it for interactive shells). |
-| `.rc.sh` | Interactive shell setup: OSC terminal title, `EDITOR=hx`, `BROWSER=firefox`, `PAGER=less`, `MANPAGER=batman`, `GRIM_DEFAULT_DIR`, guarded `SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/keepass-ssh.sock"`, `loginctl` power aliases, `doas`/`fp`/`git`/`exa` aliases, nightly Rust `PATH`. |
+| `.rc.sh` | Interactive shell setup: OSC terminal title, `EDITOR=hx`, `BROWSER=firefox`, `PAGER=less`, `MANPAGER=batman`, `GRIM_DEFAULT_DIR`, guarded `SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/keepass-ssh.sock"` (skipped in SSH sessions so agent forwarding works and no unlock dialog appears on the remote screen), `loginctl` power aliases, `doas`/`fp`/`git`/`exa` aliases, nightly Rust `PATH`. |
 | `.gitconfig` | Git identity and GPG signing (`commit.gpgsign`, `tag.gpgSign`). |
 | `.tmux.conf` | Prefix `M-Space` (+ `C-b`), system clipboard (`set-clipboard on`), base index 1, 100k history, mouse on, 1-line scroll, `M-v`/`M-b` splits, `M-c` window, `M-1..0` windows, `M-[`/`M-]` prev/next, `M-hjkl` panes, `M-f` zoom, `M-x` kill-pane confirm, no bell/activity. |
 
@@ -106,6 +109,15 @@ The front SSH socket in `.rc.sh` is the KeePassXC **unlock proxy**; see
 | `config.toml` | `adwaita-dark` theme, relative line numbers, mouse, bufferline `multiple`, colour modes, true colour, rulers `[72, 80, 120]`, inline diagnostics, `tab`/`S-tab` switch buffers. |
 | `languages.toml` | Typst via `tinymist` (`exportPdf = "never"`, soft-wrap, auto-pairs incl. `$`); C via `clangd` (`-header-insertion=never --clang-tidy`) + auto-format with `clang-format`; bash for `sh`/`openrc-run` shebangs. |
 
+`hx` is built from `~/src/helix` (`cargo install --path helix-term --locked`,
+toolchain pinned by its `rust-toolchain.toml`) and `.rc.sh` sets
+`HELIX_RUNTIME=~/src/helix/runtime`, where the built grammars live.
+`hx --grammar fetch`/`build` write to the first runtime directory,
+`~/.config/helix/runtime`; move the resulting `grammars/*.so` into
+`~/src/helix/runtime/grammars/` and delete that directory afterwards.
+`~/.config/helix` is a real directory (only the two `.toml` files are
+linked) so this never lands in the repo.
+
 ## Package: `scripts` (host-agnostic, `~/.local/bin`)
 
 | Script | Purpose / deps |
@@ -117,7 +129,7 @@ The front SSH socket in `.rc.sh` is the KeePassXC **unlock proxy**; see
 | `lorem` | Print N random English words (default 10); `aspell` + `python3`. |
 | `mkscript` | Scaffold a script in `dots/scripts/.local/bin` and symlink it into `~/.local/bin`. |
 | `mlo` | `mullvad relay set location <CODE> && mullvad reconnect`. |
-| `newsboat-browser` | Newsboat URL dispatcher: YouTube → `mpv`, everything else → `firefox`, with a `notify-send` toast. |
+| `newsboat-browser` | Newsboat URL dispatcher: YouTube (`www.`/`m.`/bare `youtube.com`, `youtu.be`) → `mpv`, everything else → `firefox`, with a `notify-send` toast. |
 | `np-rss` | Convert a NewPipe subscriptions export into RSS URLs (adds the `youtube` tag); needs `jq`. |
 
 ## Package: `desktop`
@@ -126,7 +138,7 @@ The front SSH socket in `.rc.sh` is the KeePassXC **unlock proxy**; see
 
 | File | Notes |
 | ---- | ----- |
-| `autostart` | user `gui` runlevel, wallpaper (if present), guarded `SSH_AUTH_SOCK`/ssh-agent/`keepassxc-ssh-proxy`, launches `~/.config/autostart/*.desktop` via `gtk-launch`, updates the D-Bus activation env. |
+| `autostart` | user `gui` runlevel, `gsettings` dark colour scheme + cursor/icon theme (for GTK4/libadwaita and the settings portal), wallpaper (if present), guarded `SSH_AUTH_SOCK`/ssh-agent/`keepassxc-ssh-proxy`, launches `~/.config/autostart/*.desktop` via `gtk-launch`, updates the D-Bus activation env. |
 | `environment` | Wayland hints (`MOZ_ENABLE_WAYLAND`, `SDL_VIDEODRIVER`, `_JAVA_AWT_WM_NONREPARENTING`), Qt (`QT_QPA_SYSTEM_ICON_THEME=Adwaita`, `QT_STYLE_OVERRIDE=adwaita-dark`), cursor (`capitaine-cursors-dark`, 24), keyboard `gb,ara` with `caps:none` + `grp:rctrl_toggle`. |
 | `menu.xml` | Client menu (minimize/maximize/fullscreen/decorations/always-on-top/workspaces/close) and root menu (`apk upgrade` via `upgrade-helper`, suspend, power, reboot, firmware setup, exit). |
 | `rc.xml` | Input: flat accel `pointerSpeed 0.5` (1.5x), numlock on, 10 desktops, theme `gnoblin-labwc` (radius 5, font `APL386 Unicode` 11), window rules (KeePassXC snapped centre; pinentry border + on top; polkit agent fully decorated + on top), custom regions + mousebinds, and all keybinds below. |
@@ -161,7 +173,8 @@ open `root-menu`.
 ### XDG defaults
 
 - `.config/mimeapps.list`, `.config/wlroots-mimeapps.list` — default
-  applications (Thunderbird for mail/calendar, sioyek for PDFs).
+  applications (Thunderbird for mail/calendar via the packaged
+  `thunderbird.desktop`, so the IDs work on every host; sioyek for PDFs).
 - `.config/user-dirs.dirs` — XDG directory layout used by `xdg-user-dir`.
 - `.config/autostart/org.keepassxc.KeePassXC.desktop` — launched by the labwc
   autostart loop.
@@ -169,7 +182,7 @@ open `root-menu`.
 ### waybar (`~/.config/waybar`)
 
 - `config` — bottom dock, height 32, exclusive, reload styles on change.
-  Left: `disk` (`/home` free space) + `wireplumber` (click → `pavucontrol`);
+  Left: `disk` (`/home` free space) + `wireplumber` (click → `pavucontrol-qt`);
   centre: `wlr/taskbar` (icon size 21, click activate, middle-click close,
   names truncated with `…`); right: `custom/iwd` (5 s poll, click → `iwgtk`),
   `battery` (warning 20 / critical 10), `tray`, `clock` (year-mode calendar
@@ -192,6 +205,9 @@ open `root-menu`.
   - 120 s: `lock` (KeePassXC locks first, then `swaylock`)
   - 300 s: `loginctl suspend-then-hibernate`
   - before-sleep: `lock`
+- `swayidle/config.<hostname>` overrides `config` on that host (picked by
+  `rc/init.d/swayidle`). `config.ryzen-desktop` blanks and locks but never
+  suspends, since the PC also serves files.
 
 ### User services (`openrc --user`, `~/.config/rc`)
 
@@ -234,12 +250,13 @@ open `root-menu`.
 | `bat%` | Battery charge + time left, mirroring the waybar module (same FA icons/colours); reads `/sys/class/power_supply/BAT*`, `upower` fallback for watts. |
 | `caffeine` | Toggle a Wayland idle inhibitor (`wl-inhibit`) with OSD notifications; pauses swayidle lock/blank/hibernate. Requires `XDG_RUNTIME_DIR`; no `/tmp` fallback. |
 | `colour-picker` | Copy one pixel's colour to the clipboard; `grim` + ImageMagick + `wl-copy` (optional geometry arg). |
-| `discord-gamescope` | Launch the Discord Flatpak inside Gamescope (falls back to a plain launch). |
+| `discord-gamescope` | Launch the Discord Flatpak inside Gamescope, sized to the first enabled output (`wlr-randr --json` + `jq`, default 1920x1080); falls back to a plain launch. |
 | `fmenu` | `.desktop` launcher: parses app dirs with `awk`, offers names via `wmenu`, launches with `gtk-launch`. |
 | `keepassxc-ssh-proxy` | SSH agent proxy. Listens on `keepass-ssh.sock`, forwards to the real agent (`keepass-ssh-real.sock`); when ssh needs a key from a locked DB it raises KeePassXC (mako notification + `wlrctl`), waits up to 120 s for the unlock, then retries. Logs to `~/.local/state/log/keepassxc-ssh-proxy.log`; deps `wlrctl`, `notify-send`, `dbus-send`. |
 | `lock` | `keepassxc --lock`, then `swaylock -f -c 000000`. |
 | `outputs` | `off` disables every enabled output and remembers which; `on` re-enables them and runs `kanshictl reload` to restore the layout. Used by swayidle; needs `wlr-randr`. |
-| `osd` | Media-key OSD via mako: `volume up/down/mute`, `mic mute`, `brightness up/down` (`wpctl`/`brightnessctl`, progress hint). |
+| `osd` | Media-key OSD via mako: `volume up/down/mute`, `mic mute`, `brightness up/down` (`wpctl`; `brightnessctl` when a backlight exists, otherwise `ddcutil` DDC/CI on external monitors, otherwise a "No backlight" notice; progress hint). |
+| `upgrade-helper` | Root-menu "apk upgrade": opens `foot` running `doas apk upgrade -U` and waits for Enter. |
 | `pkexec-gui` | `pkexec --disable-internal-agent` with stdio detached, so the polkit **GUI** agent prompts under Wayland. |
 | `pkexec-id` | Test binding: `pkexec-gui /usr/bin/id`. |
 | `scap` | Screenshot `all`/`area`/`output` → clipboard, timestamped PNG in `~/media/pictures/screenshots`, notification (`grim`/`slurp`/`wl-copy`). |
@@ -322,7 +339,8 @@ Core desktop:
 - `wlrctl`, `libnotify`, `dbus` (`notify-send`/`dbus-send`) — SSH unlock proxy
 - `keepassxc` with browser integration + SSH agent; `openssh`, `gnupg`
   (`pinentry-qt`)
-- Fonts `APL386 Unicode` and `Font Awesome 7 Free` (titles, bar, scripts)
+- Fonts `APL386 Unicode` (shipped in `desktop/.local/share/fonts`) and
+  `Font Awesome 7 Free` (`font-awesome`) (titles, bar, scripts)
 - `wayland-client` headers only when building `wl-inhibit`
 
 Per script (each checks its dependencies and fails clearly):
@@ -332,14 +350,17 @@ Per script (each checks its dependencies and fails clearly):
 - `jq` — `np-rss`; `aspell` + `python3` — `lorem`
 - `newsboat`, `mpv`, `firefox` — `newsboat-browser`
 - `flatpak` (and `gamescope` for GPU screen-share) — `fmenu`, `discord-gamescope`
-- `wpctl` (pipewire), `brightnessctl`, `notify-send` — `osd`
+- `wpctl` (pipewire), `brightnessctl` or `ddcutil`, `notify-send` — `osd`
+- `foot`, `doas` — `upgrade-helper`
 - `wlrctl`, `dbus-send`, `notify-send` — `keepassxc-ssh-proxy`
 - `limine-tool`, `limine-efi-x86_64`, `python3` — `limine-gen`
 
 ## Notes
 
-- Themes: Breeze for GTK, Adwaita icons for Qt/GTK, dark `gnoblin-labwc` for
-  windows, `capitaine-cursors-dark` cursor.
+- Themes: Adwaita (dark) for GTK, Adwaita icons for Qt/GTK, dark
+  `gnoblin-labwc` for windows, `capitaine-cursors-dark` cursor.
+- `settings.ini` no longer carries KDE-generated `gtk-xft-dpi` or
+  `gtk-modules` lines; scaling comes from the compositor output scale.
 - `~/.local/bin` also contains locally built files (e.g. the `wl-inhibit`
   binary) alongside the stowed symlinks.
 - GPG keyrings and `~/.ssh` are deliberately not tracked; the GPG keyring lives
