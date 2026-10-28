@@ -1,4 +1,4 @@
-timeout 60 'wlr-randr --output eDP-1 --off' resume 'wlr-randr --output eDP-1 --on'
+timeout 60 'outputs off' resume 'outputs on'
 timeout 120 'lock'
 timeout 300 'loginctl suspend-then-hibernate'
 before-sleep 'lock'

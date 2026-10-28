@@ -1,7 +1,20 @@
-profile {
+profile x1-carbon {
 	output eDP-1 {
 		mode 3840x2400@60Hz
 		position 0,0
 		scale 2
+	}
+}
+
+profile ryzen-desktop {
+	output "Acer Technologies B247Y E E4210B3BF3W01" {
+		mode 1920x1080@60Hz
+		position 0,0
+		scale 1
+	}
+	output "Philips Consumer Electronics Company PHL 227E6 ZQ01651003197" {
+		mode 1920x1080@60Hz
+		position 1920,0
+		scale 1
 	}
 }

@@ -1,0 +1,54 @@
+#!/bin/sh
+# outputs -- turn every enabled output off, or turn them back on.
+# Used by swayidle to blank screens without hard-coding output names.
+# "off" remembers which outputs were enabled so "on" restores only those.
+
+usage() {
+	echo "usage: outputs <on|off>" >&2
+	exit 1
+}
+
+command -v wlr-randr >/dev/null 2>&1 || {
+	echo "outputs: wlr-randr not found" >&2
+	exit 1
+}
+
+state="${XDG_RUNTIME_DIR:-}"
+[ -n "$state" ] && [ -d "$state" ] || {
+	echo "outputs: XDG_RUNTIME_DIR is not set" >&2
+	exit 1
+}
+state="$state/outputs-off"
+
+list() {
+	wlr-randr | awk -v want="$1" '
+		/^[^ ]/ { name = $1 }
+		/^  Enabled:/ { if (want == "" || $2 == want) print name }
+	'
+}
+
+case "${1:-}" in
+off)
+	enabled=$(list yes)
+	[ -n "$enabled" ] || exit 0
+	printf '%s\n' "$enabled" >"$state"
+	for o in $enabled; do
+		wlr-randr --output "$o" --off
+	done
+	;;
+on)
+	if [ -s "$state" ]; then
+		targets=$(cat "$state")
+	else
+		targets=$(list no)
+	fi
+	for o in $targets; do
+		wlr-randr --output "$o" --on
+	done
+	rm -f "$state"
+	# re-enabled outputs come back at 0,0; have kanshi restore the layout
+	command -v kanshictl >/dev/null 2>&1 && kanshictl reload >/dev/null 2>&1
+	exit 0
+	;;
+*) usage ;;
+esac

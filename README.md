@@ -40,7 +40,7 @@ dots/
 │   │   ├── gtk-2.0/       gtkfilechooser.ini
 │   │   ├── gtk-3.0/       settings.ini (dir is real; only settings.ini stowed)
 │   │   ├── gtk-4.0/       settings.ini (as above)
-│   │   ├── kanshi/        display profile for eDP-1
+│   │   ├── kanshi/        display profiles (x1-carbon, ryzen-desktop)
 │   │   ├── labwc/         autostart, environment, menu.xml, rc.xml, README
 │   │   ├── mako/          notification daemon defaults
 │   │   ├── mimeapps.list  xdg default applications
@@ -66,7 +66,9 @@ dots/
 `.gitconfig`, `.tmux.conf`, `.gtkrc-2.0`, and most of `~/.config/*` (including
 the whole `labwc`, `waybar`, `kanshi`, `swayidle` and `rc` directories).
 `gtk-3.0`/`gtk-4.0` are the exception: those directories are real (they also
-hold Breeze-generated CSS/assets), so only `settings.ini` is stowed.
+hold Breeze-generated CSS/assets), so only `settings.ini` is stowed. Likewise
+`~/.local/share` is a real directory and only `themes/gnoblin-labwc` is
+linked, so application data never lands in the repo.
 The `gnupg` package contains only `.gnupg/gpg-agent.conf` and is stowed with
 `--no-folding`; the keyring itself stays in the real `~/.gnupg`.
 
@@ -78,7 +80,9 @@ The `gnupg` package contains only `.gnupg/gpg-agent.conf` and is stowed with
 ./deploy.sh desktop    # base + helix + desktop (everything)
 ```
 
-`deploy.sh` prints the packages, asks for confirmation, then runs
+`deploy.sh` prints the packages, asks for confirmation, creates the real
+directories apps write into (`~/.local/{bin,share,state}`,
+`~/.config/gtk-{3,4}.0`) so stow cannot fold them into the repo, then runs
 `stow --restow`; the `gnupg` package uses `--no-folding`. If a real file blocks
 a link it offers `stow --adopt` (with a warning, since that copies live files
 from `$HOME` into the repo). The `attic` package is never deployed.
@@ -145,6 +149,7 @@ Keybinds (`W` = Super):
 | `W-A-h/j/k/l`, `W-A-c` | snap to left/bottom/top/right half, centre (no-numpad) |
 | `W-A-u/i/n/m`, `W-A-S-u/i/n/m` | snap to quadrant / quadrant corner (no-numpad) |
 | `Print`, `S-Print`, `W-Print` | `scap all` / `output` / `area` |
+| `W-s`, `W-S-s`, `W-S-o` | `scap area` / `all` / `output` (no PrintScreen key) |
 | `XF86Audio*`, `XF86MonBrightness*` | `osd` volume/mic/brightness |
 | `W-S-i`, `W-Escape` | `caffeine` (idle inhibit), `lock` |
 | `W-q`, `W-S-q`, `W-S-c` | close, kill, reconfigure |
@@ -177,9 +182,13 @@ open `root-menu`.
 
 ### kanshi, swayidle
 
-- `kanshi/config` pins `eDP-1` at `3840x2400@60Hz`, position `0,0`, scale 2.
+- `kanshi/config` has one profile per machine; kanshi applies whichever
+  matches the connected outputs:
+  - `x1-carbon`: `eDP-1` at `3840x2400@60Hz`, position `0,0`, scale 2.
+  - `ryzen-desktop`: Acer B247Y at `0,0` and Philips 227E6 at `1920,0`,
+    both `1920x1080@60Hz`, matched by make/model/serial rather than port.
 - `swayidle/config`:
-  - 60 s: blank output (`wlr-randr --off`, resume `--on`)
+  - 60 s: blank every output (`outputs off`, resume `outputs on`)
   - 120 s: `lock` (KeePassXC locks first, then `swaylock`)
   - 300 s: `loginctl suspend-then-hibernate`
   - before-sleep: `lock`
@@ -229,6 +238,7 @@ open `root-menu`.
 | `fmenu` | `.desktop` launcher: parses app dirs with `awk`, offers names via `wmenu`, launches with `gtk-launch`. |
 | `keepassxc-ssh-proxy` | SSH agent proxy. Listens on `keepass-ssh.sock`, forwards to the real agent (`keepass-ssh-real.sock`); when ssh needs a key from a locked DB it raises KeePassXC (mako notification + `wlrctl`), waits up to 120 s for the unlock, then retries. Logs to `~/.local/state/log/keepassxc-ssh-proxy.log`; deps `wlrctl`, `notify-send`, `dbus-send`. |
 | `lock` | `keepassxc --lock`, then `swaylock -f -c 000000`. |
+| `outputs` | `off` disables every enabled output and remembers which; `on` re-enables them and runs `kanshictl reload` to restore the layout. Used by swayidle; needs `wlr-randr`. |
 | `osd` | Media-key OSD via mako: `volume up/down/mute`, `mic mute`, `brightness up/down` (`wpctl`/`brightnessctl`, progress hint). |
 | `pkexec-gui` | `pkexec --disable-internal-agent` with stdio detached, so the polkit **GUI** agent prompts under Wayland. |
 | `pkexec-id` | Test binding: `pkexec-gui /usr/bin/id`. |
