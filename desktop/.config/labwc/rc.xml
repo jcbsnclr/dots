@@ -200,6 +200,7 @@
     </keybind>
 
     <!-- screenshotting -->
+    <!-- Print keys kept for external keyboards -->
     <keybind key="Print">
       <action name="Execute" command="scap all" />
     </keybind>
@@ -208,6 +209,17 @@
     </keybind>
     <keybind key="W-Print">
       <action name="Execute" command="scap area" />
+    </keybind>
+
+    <!-- Super-based screenshotting for keyboards without a PrintScreen key -->
+    <keybind key="W-s">
+      <action name="Execute" command="scap area" />
+    </keybind>
+    <keybind key="W-S-s">
+      <action name="Execute" command="scap all" />
+    </keybind>
+    <keybind key="W-S-o">
+      <action name="Execute" command="scap output" />
     </keybind>
 
     <keybind key="W-KP_7"><action name="SnapToRegion" region="top-left" /></keybind>
