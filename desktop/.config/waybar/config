@@ -37,7 +37,7 @@
     "wireplumber": {
         "format": "<span font_family='Font Awesome 7 Free'></span> {volume}%",
         "format-muted": "<span font_family='Font Awesome 7 Free'></span> MUTED",
-        "on-click": "pavucontrol",
+        "on-click": "pavucontrol-qt",
         "max-volume": 100,
         "scroll-step": 0
     },

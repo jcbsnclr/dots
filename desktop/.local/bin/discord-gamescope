@@ -4,9 +4,17 @@
 # wants a compositor that provides explicit-sync / zero-copy buffer metadata.
 # Gamescope does; wlroots/portal-wlr currently does not.
 # Falls back to a plain launch if gamescope is not installed.
+# The Gamescope size follows the first enabled output (default 1920x1080).
 FLATPAK_RUN="/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=com.discordapp.Discord --file-forwarding com.discordapp.Discord"
 if command -v gamescope >/dev/null 2>&1; then
-    exec gamescope -W 1920 -H 1200 -w 1920 -h 1200 -- $FLATPAK_RUN "$@"
+    size=$(wlr-randr --json 2>/dev/null | jq -r '[.[] | select(.enabled) | .modes[] | select(.current)][0] | "\(.width) \(.height)"' 2>/dev/null)
+    case "$size" in
+    [0-9]*' '[0-9]*) ;;
+    *) size='1920 1080' ;;
+    esac
+    w=${size% *}
+    h=${size#* }
+    exec gamescope -W "$w" -H "$h" -w "$w" -h "$h" -- $FLATPAK_RUN "$@"
 else
     exec $FLATPAK_RUN "$@"
 fi

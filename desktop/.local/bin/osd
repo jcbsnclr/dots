@@ -55,16 +55,36 @@ mic)
 	;;
 brightness)
 	case "$2" in
-	up)   brightnessctl set "$step+" >/dev/null ;;
-	down) brightnessctl set "$step-" >/dev/null ;;
+	up)   sign='+' ;;
+	down) sign='-' ;;
 	*)
 		echo "usage: osd brightness up|down" >&2
 		exit 2
 		;;
 	esac
-	cur=$(brightnessctl get)
-	max=$(brightnessctl max)
-	pct=$(( cur * 100 / max ))
+	if ls /sys/class/backlight/* >/dev/null 2>&1 &&
+	   command -v brightnessctl >/dev/null 2>&1; then
+		brightnessctl set "$step$sign" >/dev/null
+		cur=$(brightnessctl get)
+		max=$(brightnessctl max)
+		pct=$(( cur * 100 / max ))
+	elif command -v ddcutil >/dev/null 2>&1; then
+		# external monitors: DDC/CI VCP 0x10 (luminance) on every display
+		pct=
+		for d in $(ddcutil detect --brief 2>/dev/null |
+			awk '/^Display [0-9]+/ { print $2 }'); do
+			ddcutil --display "$d" --noverify setvcp 10 "$sign" "${step%\%}" >/dev/null 2>&1
+			[ -n "$pct" ] || pct=$(ddcutil --display "$d" --brief getvcp 10 2>/dev/null |
+				awk '{ if ($5 > 0) printf "%d", $4 * 100 / $5 }')
+		done
+		[ -n "$pct" ] || {
+			notify display-brightness-symbolic Brightness "No DDC/CI display" brightness 0
+			exit 1
+		}
+	else
+		notify display-brightness-symbolic Brightness "No backlight" brightness 0
+		exit 1
+	fi
 	notify display-brightness-symbolic Brightness "$pct%" brightness "$pct"
 	;;
 *)

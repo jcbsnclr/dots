@@ -36,5 +36,6 @@ rule() {
 	fi
 }
 
-rule 'https://www\.youtube\.com/' mpv
+rule 'https://\(www\.\|m\.\)\{0,1\}youtube\.com/' mpv
+rule 'https://youtu\.be/'                          mpv
 rule '.*'                         firefox

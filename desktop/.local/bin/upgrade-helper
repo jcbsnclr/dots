@@ -1,0 +1,23 @@
+#!/bin/sh
+# upgrade-helper -- run a system upgrade in a terminal and keep it open.
+# Bound to "apk upgrade" in the labwc root menu.
+
+if [ -z "${UPGRADE_HELPER_INNER:-}" ]; then
+	command -v foot >/dev/null 2>&1 || {
+		echo "upgrade-helper: foot not found" >&2
+		exit 1
+	}
+	UPGRADE_HELPER_INNER=1 exec foot -T "apk upgrade" "$0"
+fi
+
+doas apk upgrade -U
+status=$?
+
+echo
+if [ "$status" -eq 0 ]; then
+	echo "apk upgrade finished."
+else
+	echo "apk upgrade failed (exit $status)."
+fi
+printf 'Press Enter to close.'
+read -r _
