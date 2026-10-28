@@ -296,7 +296,8 @@ Retired panel experiments, kept for reference:
 
 ## Boot: Limine (`limine/`, not stowed)
 
-Alpine-only Limine setup for the UEFI X1 Carbon. Requires the FAT ESP mounted
+Alpine-only Limine setup for UEFI machines (used on the X1 Carbon and on
+`ryzen-desktop`; microcode is picked per CPU vendor). Requires the FAT ESP mounted
 at `/boot` (Limine cannot read ext4/btrfs) and pairs every kernel under
 `/lib/modules/*` with `/boot/vmlinuz-<flavour>` + `/boot/initramfs-<flavour>`
 (the names mkinitfs uses).
@@ -328,6 +329,12 @@ at `/boot` (Limine cannot read ext4/btrfs) and pairs every kernel under
 
 Rollback: firmware boot menu (F12) → "Alpine GRUB (fallback)", then
 `efibootmgr -o <old order>`. `/EFI/BOOT/BOOTX64.EFI` is left untouched.
+
+Pin the kernel command line by setting `CMDLINE` in `/etc/conf.d/limine-gen`
+after installing, so a one-off boot with edited options is never copied into
+`limine.conf`. GRUB keeps its own command line in `/etc/default/grub`; keep
+both in sync when boot options change (`grub-mkconfig -o /boot/grub/grub.cfg`
+and `limine-gen`).
 
 ## Dependencies
 
