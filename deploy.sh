@@ -69,6 +69,7 @@ if [ "$ANS" = y ]; then
 	# real directories that apps write into; stow must not fold them into
 	# the repo on a fresh $HOME
 	mkdir -p "$HOME/.local/bin" "$HOME/.local/share" "$HOME/.local/state" \
+		"$HOME/.local/share/fonts" "$HOME/.config/helix" \
 		"$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
 
 	for dep in $DEPS; do
