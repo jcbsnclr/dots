@@ -125,8 +125,8 @@ alias urc-del="rc-update del --user"
 alias urc-st="rc-status --user"
 alias usv="rc-service --user"
 
-alias vpn-on="doas rc-service wg-quick.se-sto-wg-001 start"
-alias vpn-off="doas rc-service wg-quick.se-sto-wg-001 stop"
+alias vpn-on="mullvad connect"
+alias vpn-off="mullvad disconnect"
 
 # launch gui
 alias gui="labwc-run"
