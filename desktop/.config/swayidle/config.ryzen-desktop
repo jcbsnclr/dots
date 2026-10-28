@@ -1,0 +1,3 @@
+timeout 60 'outputs off' resume 'outputs on'
+timeout 120 'lock'
+before-sleep 'lock'

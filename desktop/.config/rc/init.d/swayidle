@@ -5,7 +5,11 @@ description="Idle management daemon for Wayland"
 export PATH="${HOME}/.local/bin:${PATH}"
 
 command="/usr/bin/swayidle"
-command_args="-d -w -C ${SWAYIDLE_CONFIG:-$HOME/.config/swayidle/config}"
+
+# per-host override: ~/.config/swayidle/config.<hostname>
+_host_config="$HOME/.config/swayidle/config.$(cat /etc/hostname 2>/dev/null)"
+[ -f "$_host_config" ] || _host_config="$HOME/.config/swayidle/config"
+command_args="-d -w -C ${SWAYIDLE_CONFIG:-$_host_config}"
 
 supervisor=supervise-daemon
 error_log="${HOME}/.local/state/log/${RC_SVCNAME}.log"
