@@ -66,6 +66,11 @@ printf '\t%s\n' "$DEPS" 1>&2
 yesno "install config files"
 
 if [ "$ANS" = y ]; then
+	# real directories that apps write into; stow must not fold them into
+	# the repo on a fresh $HOME
+	mkdir -p "$HOME/.local/bin" "$HOME/.local/share" "$HOME/.local/state" \
+		"$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
+
 	for dep in $DEPS; do
 		if ! stow_pkg "$dep" --restow; then
 			msg "warning: --adopt copies live files from \$HOME into the repo."
