@@ -5,8 +5,12 @@ ANSI_REGULAR="$(tput sgr0)"
 # Set OSC0 for the terminal title.
 # Taken from vte.sh
 __osc_prompt_command() {
-  local pwd='~'
-  [ "$PWD" != "$HOME" ] && pwd=${PWD/#$HOME\//\~\/}
+  local pwd
+  case "$PWD" in
+    "$HOME")   pwd='~' ;;
+    "$HOME"/*) pwd="~/${PWD#"$HOME"/}" ;;
+    *)         pwd=$PWD ;;
+  esac
   printf '\033]0;%s@%s:%s\a' "${USER}" "${HOSTNAME%%.*}" "$pwd"
 }
 
@@ -61,6 +65,10 @@ alias ex="dtrx"
 alias fm="pcmanfm-qt"
 
 # package management
+alias aup="doas apk upgrade -Ui"
+alias add="doas apk add -i"
+alias del="doas apk del -i"
+
 if command -v flatpak >/dev/null 2>&1; then
   alias fp-add="doas flatpak install --system"
   alias fp-del="doas flatpak uninstall --system"
