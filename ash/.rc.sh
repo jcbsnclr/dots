@@ -43,7 +43,7 @@ alias poweroff="loginctl poweroff"
 alias zzz="loginctl hibernate"
 
 # misc
-alias monrl="wlr-randr --output DP-3 --on --output DP-1 --on"
+alias monrl="outputs on"
 
 # interactive and verbose aliases
 alias cp="cp -iv"
@@ -112,7 +112,7 @@ alias glg="git log"
 alias gls="exa --long --git --git-ignore"
 alias gtree="exa --tree --git --git-ignore --long --no-user -a"
 
-alias make="make -j12"
+alias make="make -j$(nproc)"
 
 # service management aliases
 alias rc-add="doas rc-update add"
