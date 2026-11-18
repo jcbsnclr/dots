@@ -1,0 +1,58 @@
+#!/bin/sh
+# pinentry-keepassxc -- raise and unlock KeePassXC before pinentry-qt.
+#
+# pinentry-qt already uses KeePassXC as an external password cache through
+# the Secret Service (GnuPG Pinentry stores an item named
+# "GnuPG: n/<keygrip>" with schema org.gnupg.Passphrase). That lookup only
+# works while the database is unlocked. When it is locked, wake KeePassXC
+# first so its unlock dialog is visible, then exec pinentry-qt, which does
+# the normal cache lookup and access-confirmation prompt.
+
+fallback=/usr/bin/pinentry-qt
+alias_path=/org/freedesktop/secrets/aliases/default
+
+# No session bus (console login, cron, ...): nothing to unlock.
+if ! command -v gdbus >/dev/null 2>&1; then
+	exec "$fallback" "$@"
+fi
+
+locked=$(gdbus call --session \
+	--dest org.freedesktop.secrets \
+	--object-path "$alias_path" \
+	--method org.freedesktop.DBus.Properties.Get \
+	org.freedesktop.Secret.Collection Locked 2>/dev/null) || locked=
+
+case "$locked" in
+*true*)
+	# Bring KeePassXC to the front. wlrctl needs an existing toplevel; if the
+	# window is hidden in the tray, starting the app again shows it.
+	if ! wlrctl window focus org.keepassxc.KeePassXC >/dev/null 2>&1; then
+		if command -v keepassxc >/dev/null 2>&1; then
+			keepassxc >/dev/null 2>&1 &
+			sleep 0.5
+		fi
+	fi
+
+	# Ask the Secret Service to unlock the collection. The returned prompt
+	# object is what displays the dialog; Prompt.Prompt blocks until the
+	# user answers (or the timeout expires).
+	reply=$(gdbus call --session \
+		--dest org.freedesktop.secrets \
+		--object-path /org/freedesktop/secrets \
+		--method org.freedesktop.Secret.Service.Unlock \
+		"[objectpath '$alias_path']" 2>/dev/null) || reply=
+
+	prompt=$(printf '%s\n' "$reply" |
+		sed -n "s/.*, objectpath '\([^']*\)').*/\1/p")
+
+	if [ -n "$prompt" ] && [ "$prompt" != / ]; then
+		timeout 120 gdbus call --session \
+			--dest org.freedesktop.secrets \
+			--object-path "$prompt" \
+			--method org.freedesktop.Secret.Prompt.Prompt '""' \
+			>/dev/null 2>&1
+	fi
+	;;
+esac
+
+exec "$fallback" "$@"

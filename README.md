@@ -263,6 +263,7 @@ open `root-menu`.
 | `discord-gamescope` | Launch the Discord Flatpak inside Gamescope, sized to the first enabled output (`wlr-randr --json` + `jq`, default 1920x1080); falls back to a plain launch. |
 | `fmenu` | `.desktop` launcher: parses app dirs with `awk`, offers names via `wmenu`, launches with `gtk-launch`. |
 | `keepassxc-ssh-proxy` | SSH agent proxy. Listens on `keepass-ssh.sock`, forwards to the real agent (`keepass-ssh-real.sock`); when ssh needs a key from a locked DB it raises KeePassXC (mako notification + `wlrctl`), waits up to 120 s for the unlock, then retries. Logs to `~/.local/state/log/keepassxc-ssh-proxy.log`; deps `wlrctl`, `notify-send`, `dbus-send`. |
+| `pinentry-keepassxc` | GPG pinentry wrapper. If the KeePassXC Secret Service collection is locked, raises it (`wlrctl`, or `keepassxc` when it is in the tray) and unlocks it via `gdbus`, then execs `pinentry-qt` so its libsecret cache lookup and KeePassXC access prompt run normally. Cancelling the unlock leaves `pinentry-qt` to prompt for the passphrase. |
 | `lock` | `keepassxc --lock`, then `swaylock -f -c 000000`. |
 | `outputs` | `off` disables every enabled output and remembers which; `on` re-enables them and runs `kanshictl reload` to restore the layout. Used by swayidle; needs `wlr-randr`. |
 | `osd` | Media-key OSD via mako: `volume up/down/mute`, `mic mute`, `brightness up/down` (`wpctl`; `brightnessctl` when a backlight exists, otherwise `ddcutil` DDC/CI on external monitors, otherwise a "No backlight" notice; progress hint). |
@@ -286,11 +287,19 @@ cc -O2 -o ~/.local/bin/wl-inhibit desktop/.local/src/wl-inhibit.c \
 ### GPG (`gnupg/.gnupg/gpg-agent.conf`)
 
 The keyring lives in the real `~/.gnupg`, outside this repo. Only
-`gpg-agent.conf` (`pinentry-program /usr/bin/pinentry-qt`) is tracked, in a
-separate `gnupg` package stowed with `--no-folding` so stow never folds the
-directory into the repo. Keyrings, private keys, `random_seed`, and
-revocation certificates are ignored via `.gitignore` and must never be
-committed.
+`gpg-agent.conf` is tracked, in a separate `gnupg` package stowed with
+`--no-folding` so stow never folds the directory into the repo. Keyrings,
+private keys, `random_seed`, and revocation certificates are ignored via
+`.gitignore` and must never be committed.
+
+`pinentry-program` points at `~/.local/bin/pinentry-keepassxc` (see above).
+The GPG passphrase is cached by GnuPG Pinentry in KeePassXC's Secret Service
+as an item named `GnuPG: n/<keygrip>` with schema `org.gnupg.Passphrase`, so
+signing normally only shows KeePassXC's access-confirmation prompt. If the
+database is locked, the wrapper raises and unlocks it first; once unlocked,
+`pinentry-qt` reads the cached passphrase and signing continues without
+copying anything by hand. Cancelling the unlock falls back to the normal
+`pinentry-qt` passphrase dialog.
 
 ## Package: `attic` (not deployed)
 
@@ -355,8 +364,10 @@ Core desktop:
   swayidle, foot, wmenu, `wl-clipboard`
 - xdg-desktop-portal + xdg-desktop-portal-gtk, lxqt-policykit
 - `wlrctl`, `libnotify`, `dbus` (`notify-send`/`dbus-send`) — SSH unlock proxy
-- `keepassxc` with browser integration + SSH agent; `openssh`, `gnupg`
-  (`pinentry-qt`)
+  and GPG pinentry wrapper
+- `gdbus` (glib) — GPG pinentry wrapper; `timeout` (busybox) bounds the unlock
+- `keepassxc` with browser integration, SSH agent and Secret Service
+  integration enabled; `openssh`, `gnupg` (`pinentry-qt`)
 - Fonts `APL386 Unicode` (shipped in `desktop/.local/share/fonts`) and
   `Font Awesome 7 Free` (`font-awesome`) (titles, bar, scripts)
 - `wayland-client` headers only when building `wl-inhibit`
