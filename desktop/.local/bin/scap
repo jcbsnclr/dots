@@ -1,21 +1,20 @@
 #!/usr/bin/env sh
 
-set -e 
+set -e
+set -o pipefail
 
 usage() {
-  echo "usage: $(basename $0) [all|area|output]" 1>&2 
+  echo "usage: $(basename "$0") [all|area|output]" 1>&2
   exit 1
 }
 
 getgeom() {
-  if ! slurp $@; then
-    exit 1
-  fi
+  slurp "$@"
 }
 
 if [ "$#" -ne 1 ]; then
   usage
-fi 
+fi
 
 case "$1" in
   all)
@@ -36,7 +35,8 @@ case "$1" in
     usage
 esac
 
-OUTP="$HOME/media/pictures/screenshots/$(date +%Y-%m-%d_%H:%M:%S).png"
-mkdir -p "${OUTP%/*}"
+dir="${GRIM_DEFAULT_DIR:-$HOME/media/pictures/screenshots}"
+OUTP="$dir/$(date +%Y-%m-%d_%H:%M:%S).png"
+mkdir -p "$dir"
 wl-paste > "$OUTP"
 notify-send -t 3000 -i "$OUTP" "Screenshot Taken" "$OUTP"

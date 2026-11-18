@@ -15,9 +15,9 @@ usage() {
 command -v stow >/dev/null 2>&1 || die "error: GNU stow not found"
 command -v tput >/dev/null 2>&1 || die "error: tput not found"
 
-BOLD=$(tput bold)
-CYAN=$(tput setaf 6)
-NORMAL=$(tput sgr0)
+BOLD=$(tput bold 2>/dev/null || true)
+CYAN=$(tput setaf 6 2>/dev/null || true)
+NORMAL=$(tput sgr0 2>/dev/null || true)
 
 yesno() {
 	while true; do
@@ -53,6 +53,14 @@ stow_pkg() {
 	esac
 }
 
+# --adopt overwrites tracked files in the repo with whatever is in $HOME, so
+# refuse to run it when that would discard uncommitted work.
+repo_dirty() {
+	command -v git >/dev/null 2>&1 || return 1
+	git rev-parse --git-dir >/dev/null 2>&1 || return 1
+	! git diff --quiet || ! git diff --cached --quiet
+}
+
 case "$TARGET" in
 base) base ;;
 helix) helix ;;
@@ -60,7 +68,7 @@ desktop) desktop ;;
 *) die "unknown target '$TARGET'" ;;
 esac
 
-msg "$(tput bold)to install:$(tput sgr0)"
+msg "${BOLD}to install:${NORMAL}"
 printf '\t%s\n' "$DEPS" 1>&2
 
 yesno "install config files"
@@ -74,6 +82,10 @@ if [ "$ANS" = y ]; then
 
 	for dep in $DEPS; do
 		if ! stow_pkg "$dep" --restow; then
+			if repo_dirty; then
+				die "error: $dep needs --adopt but the repo has uncommitted changes; commit or stash them first"
+			fi
+
 			msg "warning: --adopt copies live files from \$HOME into the repo."
 			yesno "run stow --adopt for $dep"
 

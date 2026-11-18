@@ -24,14 +24,19 @@ if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
   export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/keepass-ssh.sock"
 
   # real ssh-agent (KeePassXC hands keys to this when the database is unlocked)
-  if command -v ssh-agent >/dev/null 2>&1 &&
-     [ ! -S "$XDG_RUNTIME_DIR/keepass-ssh-real.sock" ]; then
-    ssh-agent -a "$XDG_RUNTIME_DIR/keepass-ssh-real.sock" >/dev/null
+  real="$XDG_RUNTIME_DIR/keepass-ssh-real.sock"
+  if command -v ssh-agent >/dev/null 2>&1; then
+    if [ -S "$real" ]; then
+      # ssh-add exits 2/124 when the socket is not answering, 0/1 when alive
+      SSH_AUTH_SOCK="$real" timeout 2 ssh-add -l >/dev/null 2>&1
+      case $? in 2 | 124) rm -f "$real" ;; esac
+    fi
+    [ -S "$real" ] || ssh-agent -a "$real" >/dev/null
   fi
 
   # proxy that raises the KeePassXC unlock dialog when ssh needs a locked key
   if [ -x "$HOME/.local/bin/keepassxc-ssh-proxy" ]; then
-    "$HOME/.local/bin/keepassxc-ssh-proxy" >>"$HOME/.local/state/log/keepassxc-ssh-proxy.log" 2>&1 &
+    "$HOME/.local/bin/keepassxc-ssh-proxy" >"$HOME/.local/state/log/keepassxc-ssh-proxy.log" 2>&1 &
   fi
 fi
 

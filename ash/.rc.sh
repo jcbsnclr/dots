@@ -24,10 +24,31 @@ ps1_prompt_char() {
 
 export PS1='\[$(__osc_prompt_command)\]\[$(ps1_prompt_colour)\][\u@\h \w]\[$ANSI_REGULAR\] $(ps1_prompt_char) '
 
-# local sessions use the KeePassXC unlock proxy; ssh sessions keep their
-# forwarded agent and never raise an unlock dialog on this machine's screen
+# local sessions prefer the KeePassXC unlock proxy, then the real agent.
+# A socket file can outlive its process, so probe it with ssh-add (exit 2 =
+# not answering) instead of trusting -S alone. ssh sessions keep their
+# forwarded agent and never raise an unlock dialog on this machine's screen.
 if [ -n "${XDG_RUNTIME_DIR:-}" ] && [ -z "${SSH_CONNECTION:-}" ]; then
-  export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/keepass-ssh.sock"
+  _sock=
+  for _name in keepass-ssh.sock keepass-ssh-real.sock; do
+    _path="$XDG_RUNTIME_DIR/$_name"
+    [ -S "$_path" ] || continue
+    if command -v ssh-add >/dev/null 2>&1; then
+      SSH_AUTH_SOCK="$_path" timeout 2 ssh-add -l >/dev/null 2>&1
+      case $? in 2 | 124) continue ;; esac
+    fi
+    _sock="$_path"
+    break
+  done
+
+  if [ -n "$_sock" ]; then
+    export SSH_AUTH_SOCK="$_sock"
+  elif [ "${SSH_AUTH_SOCK:-}" = "$XDG_RUNTIME_DIR/keepass-ssh.sock" ] ||
+       [ "${SSH_AUTH_SOCK:-}" = "$XDG_RUNTIME_DIR/keepass-ssh-real.sock" ]; then
+    # inherited from labwc, but the process behind it is gone
+    unset SSH_AUTH_SOCK
+  fi
+  unset _sock _name _path
 fi
 
 export EDITOR=hx
@@ -147,8 +168,5 @@ alias os="jack_oscrolloscope -d 0.1 -s -f 100"
 
 alias oracle="opencode"
 
-if [ "$USER" != "root" ]; then
-  export PATH="$HOME/.rustup/toolchains/nightly-x86_64-unknown-linux-musl/bin:$PATH"
-fi
 export HELIX_RUNTIME="$HOME/src/helix/runtime"
 alias mvd='mullvad'

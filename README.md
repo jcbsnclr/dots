@@ -88,14 +88,16 @@ directories apps write into (`~/.local/{bin,share,state}`, `~/.local/share/fonts
 repo, then runs
 `stow --restow`; the `gnupg` package uses `--no-folding`. If a real file blocks
 a link it offers `stow --adopt` (with a warning, since that copies live files
-from `$HOME` into the repo). The `attic` package is never deployed.
+from `$HOME` into the repo); `--adopt` is refused while the repo has
+uncommitted changes, so it cannot discard work. The `attic` package is never
+deployed.
 
 ## Package: `ash`
 
 | File | What it does |
 | ---- | ------------ |
 | `.profile` | Adds `~/.local/bin` and `~/.opencode/bin` to `PATH`, sources `~/.cargo/env` when present, sets `ENV="$HOME/.rc.sh"` (ash reads it for interactive shells). |
-| `.rc.sh` | Interactive shell setup: OSC terminal title, `EDITOR=hx`, `BROWSER=firefox`, `PAGER=less`, `MANPAGER=batman`, `GRIM_DEFAULT_DIR`, guarded `SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/keepass-ssh.sock"` (skipped in SSH sessions so agent forwarding works and no unlock dialog appears on the remote screen), `loginctl` power aliases, `doas`/`fp`/`git`/`exa` aliases, nightly Rust `PATH`. |
+| `.rc.sh` | Interactive shell setup: OSC terminal title, `EDITOR=hx`, `BROWSER=firefox`, `PAGER=less`, `MANPAGER=batman`, `GRIM_DEFAULT_DIR`, `SSH_AUTH_SOCK` set to the KeePassXC proxy only when its socket answers (falling back to the real agent, and left alone in SSH sessions so forwarding works without raising an unlock dialog on the remote screen), `loginctl` power aliases, `doas`/`fp`/`git`/`exa` aliases. |
 | `.gitconfig` | Git identity and GPG signing (`commit.gpgsign`, `tag.gpgSign`). |
 | `.tmux.conf` | Prefix `M-Space` (+ `C-b`), system clipboard (`set-clipboard on`), base index 1, 100k history, mouse on, 1-line scroll, `M-v`/`M-b` splits, `M-c` window, `M-1..0` windows, `M-[`/`M-]` prev/next, `M-hjkl` panes, `M-f` zoom, `M-x` kill-pane confirm, no bell/activity. |
 
@@ -138,7 +140,7 @@ linked) so this never lands in the repo.
 
 | File | Notes |
 | ---- | ----- |
-| `autostart` | user `gui` runlevel, `gsettings` dark colour scheme + cursor/icon theme (for GTK4/libadwaita and the settings portal), wallpaper (if present), guarded `SSH_AUTH_SOCK`/ssh-agent/`keepassxc-ssh-proxy`, launches `~/.config/autostart/*.desktop` via `gtk-launch`, updates the D-Bus activation env. |
+| `autostart` | user `gui` runlevel, `gsettings` dark colour scheme + cursor/icon theme (for GTK4/libadwaita and the settings portal), wallpaper (if present), `SSH_AUTH_SOCK`, ssh-agent (a stale agent socket is replaced) and `keepassxc-ssh-proxy` (log truncated per session), launches `~/.config/autostart/*.desktop` via `gtk-launch`, updates the D-Bus activation env. |
 | `environment` | Wayland hints (`MOZ_ENABLE_WAYLAND`, `SDL_VIDEODRIVER`, `_JAVA_AWT_WM_NONREPARENTING`), Qt (`QT_QPA_SYSTEM_ICON_THEME=breeze-dark`, `QT_STYLE_OVERRIDE=adwaita-dark`), cursor (`capitaine-cursors-dark`, 24), keyboard `gb,ara` with `caps:none` + `grp:rctrl_toggle`. |
 | `menu.xml` | Client menu (minimize/maximize/fullscreen/decorations/always-on-top/workspaces/close) and root menu (`apk upgrade` via `upgrade-helper`, suspend, power, reboot, firmware setup, exit). |
 | `rc.xml` | Input: flat accel `pointerSpeed 0.5` (1.5x), numlock on, 10 desktops, theme `gnoblin-labwc` (radius 5, font `APL386 Unicode` 11), window rules (KeePassXC snapped centre; pinentry border + on top; polkit agent fully decorated + on top), custom regions + mousebinds, and all keybinds below. |
@@ -267,7 +269,7 @@ open `root-menu`.
 | `upgrade-helper` | Root-menu "apk upgrade": opens `foot` running `doas apk upgrade -U` and waits for Enter. |
 | `pkexec-gui` | `pkexec --disable-internal-agent` with stdio detached, so the polkit **GUI** agent prompts under Wayland. |
 | `pkexec-id` | Test binding: `pkexec-gui /usr/bin/id`. |
-| `scap` | Screenshot `all`/`area`/`output` → clipboard, timestamped PNG in `~/media/pictures/screenshots`, notification (`grim`/`slurp`/`wl-copy`). |
+| `scap` | Screenshot `all`/`area`/`output` → clipboard, timestamped PNG in `$GRIM_DEFAULT_DIR` (default `~/media/pictures/screenshots`), notification (`grim`/`slurp`/`wl-copy`). |
 | `scratch-term` | Throwaway `foot` + `tmux` in a temp dir. |
 | `wmenu`, `wmenu-run` | Wrappers forcing the Adwaita-dark palette on `wmenu`/`wmenu-run`. |
 | `xdg-terminal-exec` | Minimal `xdg-terminal-exec`: runs `foot` (or `foot -e CMD`). |
