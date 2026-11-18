@@ -60,7 +60,7 @@ export BROWSER=firefox
 export PAGER=less
 export MANPAGER=batman
 
-export GRIM_DEFAULT_DIR=$HOME/media/pictures/screenshots
+export GRIM_DEFAULT_DIR="$HOME/media/pictures/screenshots"
 
 # power management aliases
 alias reboot="loginctl reboot"
@@ -76,7 +76,7 @@ alias rm="rm -iv"
 alias mkdir="mkdir -v"
 alias mv="mv -iv"
 alias dfree="df -h"
-alias tree="exa --tree --long"
+alias etree="eza --tree --long ."
 alias pg="pgrep"
 alias nb="newsboat"
 alias chx="chmod +x"
@@ -98,14 +98,14 @@ if command -v flatpak >/dev/null 2>&1; then
 fi
 
 # navigation
-alias aports="cd $HOME/aports"
-alias src="cd $HOME/src"
-alias down="cd $HOME/net/down"
-alias docs="cd $HOME/docs"
-alias pictures="cd $HOME/media/pictures"
-alias videos="cd $HOME/media/videos"
-alias music="cd $HOME/media/music"
-alias dots="cd $HOME/dots"
+alias aports='cd "$HOME/aports"'
+alias src='cd "$HOME/src"'
+alias down='cd "$HOME/net/down"'
+alias docs='cd "$HOME/docs"'
+alias pictures='cd "$HOME/media/pictures"'
+alias videos='cd "$HOME/media/videos"'
+alias music='cd "$HOME/media/music"'
+alias dots='cd "$HOME/dots"'
 
 alias ..="cd .."
 alias ..2="cd ../.."
@@ -123,7 +123,6 @@ alias chxas="doas chmod +x"
 alias chuxas="doas chmod u+x"
 
 # generic aliases
-alias bat="bat --color=always"
 alias lsa="ls -lsah"
 
 # git aliases
@@ -138,10 +137,10 @@ alias grm="git rm"
 alias gck="git checkout"
 alias glg="git log"
 
-alias gls="exa --long --git --git-ignore"
-alias gtree="exa --tree --git --git-ignore --long --no-user -a"
+alias gls="eza --long --git --git-ignore ."
+alias gtree="eza --tree --git --git-ignore --long --no-user -a ."
 
-alias make="make -j$(nproc)"
+alias mj='make -j$(nproc)'
 
 # service management aliases
 alias rc-add="doas rc-update add"
@@ -164,7 +163,9 @@ alias msc="meson compile -C build/"
 alias mst="meson test -C build/"
 alias mss="meson setup build/"
 
-alias os="jack_oscrolloscope -d 0.1 -s -f 100"
+if command -v jack_oscrolloscope >/dev/null 2>&1; then
+  alias os="jack_oscrolloscope -d 0.1 -s -f 100"
+fi
 
 alias oracle="opencode"
 

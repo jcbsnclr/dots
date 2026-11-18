@@ -97,7 +97,7 @@ deployed.
 | File | What it does |
 | ---- | ------------ |
 | `.profile` | Adds `~/.local/bin` and `~/.opencode/bin` to `PATH`, sources `~/.cargo/env` when present, sets `ENV="$HOME/.rc.sh"` (ash reads it for interactive shells). |
-| `.rc.sh` | Interactive shell setup: OSC terminal title, `EDITOR=hx`, `BROWSER=firefox`, `PAGER=less`, `MANPAGER=batman`, `GRIM_DEFAULT_DIR`, `SSH_AUTH_SOCK` set to the KeePassXC proxy only when its socket answers (falling back to the real agent, and left alone in SSH sessions so forwarding works without raising an unlock dialog on the remote screen), `loginctl` power aliases, `doas`/`fp`/`git`/`exa` aliases. |
+| `.rc.sh` | Interactive shell setup: OSC terminal title, `EDITOR=hx`, `BROWSER=firefox`, `PAGER=less`, `MANPAGER=batman`, `GRIM_DEFAULT_DIR`, `SSH_AUTH_SOCK` set to the KeePassXC proxy only when its socket answers (falling back to the real agent, and left alone in SSH sessions so forwarding works without raising an unlock dialog on the remote screen), `loginctl` power aliases, `doas`/`fp`/`git`/`eza` aliases. |
 | `.gitconfig` | Git identity and GPG signing (`commit.gpgsign`, `tag.gpgSign`). |
 | `.tmux.conf` | Prefix `M-Space` (+ `C-b`), system clipboard (`set-clipboard on`), base index 1, 100k history, mouse on, 1-line scroll, `M-v`/`M-b` splits, `M-c` window, `M-1..0` windows, `M-[`/`M-]` prev/next, `M-hjkl` panes, `M-f` zoom, `M-x` kill-pane confirm, no bell/activity. |
 
