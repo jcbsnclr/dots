@@ -274,6 +274,13 @@
     <keybind key="XF86MonBrightnessDown">
       <action name="Execute" command="osd brightness down" />
     </keybind>
+    <!-- Shift + volume keys: brightness for keyboards without brightness keys (ddcutil on desktops) -->
+    <keybind key="S-XF86AudioRaiseVolume">
+      <action name="Execute" command="osd brightness up" />
+    </keybind>
+    <keybind key="S-XF86AudioLowerVolume">
+      <action name="Execute" command="osd brightness down" />
+    </keybind>
 
     <!-- caffeine: toggle idle inhibitor (screen stays on) -->
     <keybind key="W-S-i">

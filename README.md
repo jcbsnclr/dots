@@ -40,7 +40,7 @@ dots/
 │   │   ├── gtk-2.0/       gtkfilechooser.ini
 │   │   ├── gtk-3.0/       settings.ini (dir is real; only settings.ini stowed)
 │   │   ├── gtk-4.0/       settings.ini (as above)
-│   │   ├── kanshi/        display profiles (x1-carbon, ryzen-desktop)
+│   │   ├── kanshi/        display output defaults, aliases and profiles
 │   │   ├── labwc/         autostart, environment, menu.xml, rc.xml, README
 │   │   ├── mako/          notification daemon defaults
 │   │   ├── mimeapps.list  xdg default applications
@@ -139,7 +139,7 @@ linked) so this never lands in the repo.
 | File | Notes |
 | ---- | ----- |
 | `autostart` | user `gui` runlevel, `gsettings` dark colour scheme + cursor/icon theme (for GTK4/libadwaita and the settings portal), wallpaper (if present), guarded `SSH_AUTH_SOCK`/ssh-agent/`keepassxc-ssh-proxy`, launches `~/.config/autostart/*.desktop` via `gtk-launch`, updates the D-Bus activation env. |
-| `environment` | Wayland hints (`MOZ_ENABLE_WAYLAND`, `SDL_VIDEODRIVER`, `_JAVA_AWT_WM_NONREPARENTING`), Qt (`QT_QPA_SYSTEM_ICON_THEME=Adwaita`, `QT_STYLE_OVERRIDE=adwaita-dark`), cursor (`capitaine-cursors-dark`, 24), keyboard `gb,ara` with `caps:none` + `grp:rctrl_toggle`. |
+| `environment` | Wayland hints (`MOZ_ENABLE_WAYLAND`, `SDL_VIDEODRIVER`, `_JAVA_AWT_WM_NONREPARENTING`), Qt (`QT_QPA_SYSTEM_ICON_THEME=breeze-dark`, `QT_STYLE_OVERRIDE=adwaita-dark`), cursor (`capitaine-cursors-dark`, 24), keyboard `gb,ara` with `caps:none` + `grp:rctrl_toggle`. |
 | `menu.xml` | Client menu (minimize/maximize/fullscreen/decorations/always-on-top/workspaces/close) and root menu (`apk upgrade` via `upgrade-helper`, suspend, power, reboot, firmware setup, exit). |
 | `rc.xml` | Input: flat accel `pointerSpeed 0.5` (1.5x), numlock on, 10 desktops, theme `gnoblin-labwc` (radius 5, font `APL386 Unicode` 11), window rules (KeePassXC snapped centre; pinentry border + on top; polkit agent fully decorated + on top), custom regions + mousebinds, and all keybinds below. |
 | `README` | Two-line pointer to `man labwc-config` / `man labwc-theme`. |
@@ -163,6 +163,7 @@ Keybinds (`W` = Super):
 | `Print`, `S-Print`, `W-Print` | `scap all` / `output` / `area` |
 | `W-s`, `W-S-s`, `W-S-o` | `scap area` / `all` / `output` (no PrintScreen key) |
 | `XF86Audio*`, `XF86MonBrightness*` | `osd` volume/mic/brightness |
+| `S-XF86AudioRaiseVolume/LowerVolume` | `osd` brightness up/down (no brightness keys) |
 | `W-S-i`, `W-Escape` | `caffeine` (idle inhibit), `lock` |
 | `W-q`, `W-S-q`, `W-S-c` | close, kill, reconfigure |
 
@@ -195,11 +196,18 @@ open `root-menu`.
 
 ### kanshi, swayidle
 
-- `kanshi/config` has one profile per machine; kanshi applies whichever
+- `kanshi/config` defines each output once (mode, scale and a stable
+  `$alias`), then one profile per layout; kanshi applies whichever profile
   matches the connected outputs:
-  - `x1-carbon`: `eDP-1` at `3840x2400@60Hz`, position `0,0`, scale 2.
-  - `ryzen-desktop`: Acer B247Y at `0,0` and Philips 227E6 at `1920,0`,
-    both `1920x1080@60Hz`, matched by make/model/serial rather than port.
+  - defaults: `eDP-1` at `3840x2400@60Hz` scale 2; Acer B247Y and Philips
+    227E6 at `1920x1080@60Hz` scale 1.
+  - `x1-carbon`: internal panel only, at `0,0`.
+  - `ryzen-desktop`: Acer at `0,0` (100 Hz) and Philips at `1920,0`.
+  - `laptop-both`: internal panel disabled, both monitors side by side.
+  - `laptop-acer` / `laptop-philips`: internal panel disabled, one monitor.
+  - Monitors are matched by make/model glob (`Acer ... *`) and addressed via
+    `$acer`/`$philips`, so port or cable changes do not matter; the serial is
+    deliberately ignored.
 - `swayidle/config`:
   - 60 s: blank every output (`outputs off`, resume `outputs on`)
   - 120 s: `lock` (KeePassXC locks first, then `swaylock`)
@@ -365,8 +373,8 @@ Per script (each checks its dependencies and fails clearly):
 
 ## Notes
 
-- Themes: Adwaita (dark) for GTK, Adwaita icons for Qt/GTK, dark
-  `gnoblin-labwc` for windows, `capitaine-cursors-dark` cursor.
+- Themes: Adwaita (dark) for GTK, Adwaita icons for GTK and breeze-dark for
+  Qt, dark `gnoblin-labwc` for windows, `capitaine-cursors-dark` cursor.
 - `settings.ini` no longer carries KDE-generated `gtk-xft-dpi` or
   `gtk-modules` lines; scaling comes from the compositor output scale.
 - `~/.local/bin` also contains locally built files (e.g. the `wl-inhibit`
