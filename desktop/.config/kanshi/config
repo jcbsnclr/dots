@@ -30,6 +30,19 @@ profile ryzen-desktop {
 	output $philips position 1920,0
 }
 
+# Desktop with only one monitor connected. Without these, no profile matches
+# and the Acer falls back to its preferred 60 Hz mode.
+profile ryzen-acer {
+	output $acer {
+		mode 1920x1080@100Hz
+		position 0,0
+	}
+}
+
+profile ryzen-philips {
+	output $philips position 0,0
+}
+
 # Laptop docked to both monitors, internal panel off.
 profile laptop-both {
 	output eDP-1 disable

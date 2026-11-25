@@ -25,30 +25,41 @@ ps1_prompt_char() {
 export PS1='\[$(__osc_prompt_command)\]\[$(ps1_prompt_colour)\][\u@\h \w]\[$ANSI_REGULAR\] $(ps1_prompt_char) '
 
 # local sessions prefer the KeePassXC unlock proxy, then the real agent.
-# A socket file can outlive its process, so probe it with ssh-add (exit 2 =
-# not answering) instead of trusting -S alone. ssh sessions keep their
-# forwarded agent and never raise an unlock dialog on this machine's screen.
+# A socket file can outlive its process, so probe it with a bare connect
+# (never an agent request: the proxy treats REQUEST_IDENTITIES with no keys
+# as "unlock KeePassXC" and would pop the database dialog on every shell).
+# ssh sessions keep their forwarded agent and never raise an unlock dialog
+# on this machine's screen.
 if [ -n "${XDG_RUNTIME_DIR:-}" ] && [ -z "${SSH_CONNECTION:-}" ]; then
-  _sock=
-  for _name in keepass-ssh.sock keepass-ssh-real.sock; do
-    _path="$XDG_RUNTIME_DIR/$_name"
-    [ -S "$_path" ] || continue
-    if command -v ssh-add >/dev/null 2>&1; then
-      SSH_AUTH_SOCK="$_path" timeout 2 ssh-add -l >/dev/null 2>&1
-      case $? in 2 | 124) continue ;; esac
-    fi
-    _sock="$_path"
-    break
-  done
+  _proxy="$XDG_RUNTIME_DIR/keepass-ssh.sock"
+  _real="$XDG_RUNTIME_DIR/keepass-ssh-real.sock"
 
-  if [ -n "$_sock" ]; then
-    export SSH_AUTH_SOCK="$_sock"
-  elif [ "${SSH_AUTH_SOCK:-}" = "$XDG_RUNTIME_DIR/keepass-ssh.sock" ] ||
-       [ "${SSH_AUTH_SOCK:-}" = "$XDG_RUNTIME_DIR/keepass-ssh-real.sock" ]; then
+  __sock_listens() {
+    [ -S "$1" ] || return 1
+    if command -v nc >/dev/null 2>&1 && nc -h 2>&1 | grep -q -- '-U'; then
+      nc -U -z -w 1 "$1" >/dev/null 2>&1
+    elif command -v python3 >/dev/null 2>&1; then
+      python3 -c 'import socket,sys
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+s.settimeout(1)
+s.connect(sys.argv[1])' "$1" >/dev/null 2>&1
+    else
+      # No probe available; trust the socket file.
+      return 0
+    fi
+  }
+
+  if __sock_listens "$_proxy"; then
+    export SSH_AUTH_SOCK="$_proxy"
+  elif __sock_listens "$_real"; then
+    export SSH_AUTH_SOCK="$_real"
+  elif [ "${SSH_AUTH_SOCK:-}" = "$_proxy" ] ||
+       [ "${SSH_AUTH_SOCK:-}" = "$_real" ]; then
     # inherited from labwc, but the process behind it is gone
     unset SSH_AUTH_SOCK
   fi
-  unset _sock _name _path
+  unset _proxy _real
+  unset -f __sock_listens
 fi
 
 export EDITOR=hx
@@ -68,7 +79,7 @@ alias poweroff="loginctl poweroff"
 alias zzz="loginctl hibernate"
 
 # misc
-alias monrl="outputs on"
+alias monrl="outputs all"
 
 # interactive and verbose aliases
 alias cp="cp -iv"
@@ -169,5 +180,9 @@ fi
 
 alias oracle="opencode"
 
-export HELIX_RUNTIME="$HOME/src/helix/runtime"
+# only point helix at the local build when it is actually present
+if [ -d "$HOME/src/helix/runtime" ]; then
+  export HELIX_RUNTIME="$HOME/src/helix/runtime"
+fi
+
 alias mvd='mullvad'

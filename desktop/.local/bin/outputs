@@ -2,9 +2,10 @@
 # outputs -- turn every enabled output off, or turn them back on.
 # Used by swayidle to blank screens without hard-coding output names.
 # "off" remembers which outputs were enabled so "on" restores only those.
+# "all" re-enables every disabled output (the `monrl` alias).
 
 usage() {
-	echo "usage: outputs <on|off>" >&2
+	echo "usage: outputs <on|off|all>" >&2
 	exit 1
 }
 
@@ -35,20 +36,21 @@ off)
 	for o in $enabled; do
 		wlr-randr --output "$o" --off
 	done
+	exit 0
 	;;
 on)
-	if [ -s "$state" ]; then
-		targets=$(cat "$state")
-	else
-		targets=$(list no)
-	fi
-	for o in $targets; do
-		wlr-randr --output "$o" --on
-	done
-	rm -f "$state"
-	# re-enabled outputs come back at 0,0; have kanshi restore the layout
-	command -v kanshictl >/dev/null 2>&1 && kanshictl reload >/dev/null 2>&1
-	exit 0
+	[ -s "$state" ] || exit 0
+	targets=$(cat "$state")
+	;;
+all)
+	targets=$(list no)
 	;;
 *) usage ;;
 esac
+
+for o in $targets; do
+	wlr-randr --output "$o" --on
+done
+rm -f "$state"
+# re-enabled outputs come back at 0,0; have kanshi restore the layout
+command -v kanshictl >/dev/null 2>&1 && kanshictl reload >/dev/null 2>&1

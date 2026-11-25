@@ -56,6 +56,17 @@ def write_message(sock, payload):
     sock.sendall(struct.pack(">I", len(payload)) + payload)
 
 
+def socket_is_live(path, timeout=0.5):
+    """Return True if something is accepting connections on a Unix socket."""
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as probe:
+            probe.settimeout(timeout)
+            probe.connect(path)
+        return True
+    except OSError:
+        return False
+
+
 def identities_count(agent_socket):
     """Return the number of identities in the real agent, or None on error."""
     try:
@@ -206,14 +217,28 @@ class Proxy:
         self.listen_socket = listen_socket
         self.agent_socket = agent_socket
         self.unlocker = unlocker
+        self.pidfile = os.path.join(
+            os.path.dirname(self.listen_socket), "keepassxc-ssh-proxy.pid"
+        )
+        self.socket_inode = None
 
     def serve_forever(self):
         if os.path.exists(self.listen_socket):
+            # A previous proxy (or something else) may still own the socket.
+            if socket_is_live(self.listen_socket):
+                log(f"another listener is already using {self.listen_socket}; exiting")
+                return
             os.unlink(self.listen_socket)
         server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         server.bind(self.listen_socket)
         os.chmod(self.listen_socket, 0o600)
         server.listen(16)
+        self.socket_inode = os.stat(self.listen_socket).st_ino
+        try:
+            with open(self.pidfile, "w", encoding="utf-8") as pidfile:
+                pidfile.write(f"{os.getpid()}\n")
+        except OSError as error:
+            log(f"cannot write {self.pidfile}: {error}")
         atexit.register(self.cleanup)
         log(f"listening on {self.listen_socket}, forwarding to {self.agent_socket}")
         while True:
@@ -221,8 +246,22 @@ class Proxy:
             threading.Thread(target=self.handle, args=(client,), daemon=True).start()
 
     def cleanup(self):
+        # Only remove the socket/pidfile if they still belong to this process;
+        # a newer proxy may have replaced them after a GUI restart.
         try:
-            os.unlink(self.listen_socket)
+            if (
+                self.socket_inode is not None
+                and os.stat(self.listen_socket).st_ino == self.socket_inode
+            ):
+                os.unlink(self.listen_socket)
+        except OSError:
+            pass
+        try:
+            if os.path.exists(self.pidfile):
+                with open(self.pidfile, encoding="utf-8") as pidfile:
+                    owner = pidfile.read().strip()
+                if owner == str(os.getpid()):
+                    os.unlink(self.pidfile)
         except OSError:
             pass
 

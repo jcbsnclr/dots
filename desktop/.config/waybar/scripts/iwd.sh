@@ -1,7 +1,12 @@
 #!/bin/sh
 # Waybar iwd/wifi status for a wireless interface.
 
-IFACE="${IWD_IFACE:-wlan0}"
+IFACE="${IWD_IFACE:-}"
+if [ -z "$IFACE" ] && command -v iw >/dev/null 2>&1; then
+	IFACE=$(iw dev 2>/dev/null | awk '$1 == "Interface" { print $2; exit }')
+fi
+[ -n "$IFACE" ] || IFACE=wlan0
+
 FA="<span font_family='Font Awesome 7 Free'>"
 
 case "$IFACE" in

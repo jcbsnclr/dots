@@ -34,8 +34,27 @@ if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
     [ -S "$real" ] || ssh-agent -a "$real" >/dev/null
   fi
 
-  # proxy that raises the KeePassXC unlock dialog when ssh needs a locked key
+  # proxy that raises the KeePassXC unlock dialog when ssh needs a locked key.
+  # Replace an instance from an earlier GUI session: it would otherwise keep
+  # the old session's D-Bus/Wayland environment (and its log fd).
+  proxy_pid="$XDG_RUNTIME_DIR/keepassxc-ssh-proxy.pid"
   if [ -x "$HOME/.local/bin/keepassxc-ssh-proxy" ]; then
+    if [ -s "$proxy_pid" ]; then
+      old=$(cat "$proxy_pid" 2>/dev/null)
+      cmd=$(tr '\0' ' ' <"/proc/$old/cmdline" 2>/dev/null || true)
+      case "$cmd" in
+      *keepassxc-ssh-proxy*)
+        kill "$old" 2>/dev/null
+        i=0
+        while kill -0 "$old" 2>/dev/null && [ "$i" -lt 20 ]; do
+          sleep 0.1
+          i=$((i + 1))
+        done
+        kill -9 "$old" 2>/dev/null || true
+        ;;
+      esac
+    fi
+    rm -f "$proxy_pid"
     "$HOME/.local/bin/keepassxc-ssh-proxy" >"$HOME/.local/state/log/keepassxc-ssh-proxy.log" 2>&1 &
   fi
 fi

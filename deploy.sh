@@ -54,11 +54,11 @@ stow_pkg() {
 }
 
 # --adopt overwrites tracked files in the repo with whatever is in $HOME, so
-# refuse to run it when that would discard uncommitted work.
+# refuse to run it when that would discard uncommitted or untracked work.
 repo_dirty() {
 	command -v git >/dev/null 2>&1 || return 1
 	git rev-parse --git-dir >/dev/null 2>&1 || return 1
-	! git diff --quiet || ! git diff --cached --quiet
+	[ -n "$(git status --porcelain --untracked-files=normal)" ]
 }
 
 case "$TARGET" in
@@ -77,8 +77,8 @@ if [ "$ANS" = y ]; then
 	# real directories that apps write into; stow must not fold them into
 	# the repo on a fresh $HOME
 	mkdir -p "$HOME/.local/bin" "$HOME/.local/share" "$HOME/.local/state" \
-		"$HOME/.local/share/fonts" "$HOME/.config/helix" \
-		"$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
+		"$HOME/.local/state/log" "$HOME/.local/share/fonts" \
+		"$HOME/.config/helix" "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
 
 	for dep in $DEPS; do
 		if ! stow_pkg "$dep" --restow; then
